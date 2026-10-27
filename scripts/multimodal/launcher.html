@@ -1,23 +1,152 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>微信群聊工作台</title>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>微信聊天工作台</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f6f5;color:#263b32;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}main{max-width:1050px;margin:50px auto;padding:0 24px}small{color:#697b70}h1{font-size:30px;margin:10px 0}header p{color:#697b70;line-height:1.8}.layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:28px}section{background:white;border:1px solid #dce5df;border-radius:16px;padding:24px}h2{font-size:18px;margin:0 0 18px}input[type=search]{width:100%;border:1px solid #b8cabe;border-radius:8px;padding:12px;font:inherit}button,.result{border:1px solid #c1d2c7;border-radius:8px;background:#fff;color:#284c37;padding:10px 15px;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:wait}#start{width:100%;background:#32674a;color:white;margin-top:16px}#groups{max-height:390px;overflow:auto;margin-top:14px}.group{display:flex;align-items:flex-start;gap:10px;padding:13px 4px;border-bottom:1px solid #edf1ee;cursor:pointer;overflow-wrap:anywhere}.group input{width:18px;height:18px;flex-shrink:0}.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#logs{background:#f4f7f5;border-radius:8px;padding:14px;height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,monospace}#status{font-weight:600}.result{display:block;margin-top:10px;text-decoration:none}#error{color:#a2392b;white-space:pre-wrap}footer{color:#718176;font-size:12px;margin:20px 0;line-height:1.8}@media(max-width:740px){main{margin:24px auto}.layout{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#f4f6f5;color:#263b32;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}main{max-width:1050px;margin:28px auto;padding:0 24px}small{color:#697b70}h1{font-size:28px;margin:10px 0}header p{color:#697b70;line-height:1.8}.layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px}section{background:white;border:1px solid #dce5df;border-radius:16px;padding:20px}h2{font-size:18px;margin:0 0 18px}input[type=search]{width:100%;border:1px solid #b8cabe;border-radius:8px;padding:12px;font:inherit}button,.result{border:1px solid #c1d2c7;border-radius:8px;background:#fff;color:#284c37;padding:10px 15px;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:wait}#start{width:100%;background:#32674a;color:white;margin-top:16px}#groups{max-height:390px;overflow:auto;margin-top:14px}.group{display:flex;align-items:flex-start;gap:10px;padding:13px 4px;border-bottom:1px solid #edf1ee;cursor:pointer;overflow-wrap:anywhere}.group input{width:18px;height:18px;flex-shrink:0}.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#logs{background:#f4f7f5;border-radius:8px;padding:14px;height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,monospace}#status{font-weight:600}.result{display:block;margin-top:10px;text-decoration:none}#error{color:#a2392b;white-space:pre-wrap}footer{color:#718176;font-size:12px;margin:20px 0;line-height:1.8}@media(max-width:740px){main{margin:24px auto}.layout{grid-template-columns:1fr}}
+
+#groups{max-height:480px;border:1px solid #e0e8e2;border-radius:12px;background:#fff}
+.group{position:relative;align-items:center;gap:12px;padding:14px 12px;min-height:76px;transition:background .12s;border-bottom:1px solid #edf1ee}
+.group:last-child{border-bottom:0}.group:hover{background:#f5f8f6}.group.is-selected{background:#eaf3ed}.group:focus-within{outline:2px solid #32674a;outline-offset:-2px}.group input{accent-color:#32674a;margin:0}
+.avatar{position:relative;display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:11px;overflow:hidden;background:#e0ece3;color:#31583f;font-size:20px;font-weight:600}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.avatar.group-avatar{background:#e5eaf4;color:#3d537b}
+.contact-copy{min-width:0;flex:1}.contact-name{display:block;font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.contact-detail{display:block;margin-top:5px;color:#586d60;font-size:12px;overflow-wrap:anywhere;line-height:1.5}.last-active{font-size:12px;color:#586d60;flex-shrink:0}
+.list-options{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:14px 0}.list-options select{padding:9px;min-height:44px;font:inherit;border:1px solid #b8cabe;border-radius:8px;background:white;color:inherit}.list-options label{display:flex;align-items:center;gap:6px}.list-options input{accent-color:#32674a}#list-note{display:block;line-height:1.7}#more{display:block;width:100%;margin-top:10px}#more[hidden]{display:none}#empty{padding:24px 14px;color:#586d60;line-height:1.8}
+@media(max-width:440px){.group{gap:9px;padding:12px 9px}.last-active{display:none}section{padding:18px}}
+
+[hidden]{display:none!important}.steps{display:flex;gap:12px;list-style:none;padding:0;margin:18px 0;color:#586d60;flex-wrap:wrap}.steps li{padding:8px 12px;border-radius:20px;background:#e9eeeb}.steps li[aria-current=step]{background:#32674a;color:white}
+#connection-card{margin-top:16px}.connection-top{display:flex;align-items:center;justify-content:space-between;gap:12px}#connection-status{font-weight:600;padding:7px 12px;border-radius:20px;background:#f1eee4;color:#735d26}#connection-status.ready{background:#e4f2e8;color:#245439}#connection-help{line-height:1.8;max-width:65ch;margin:12px 0}.connection-actions{display:flex;gap:10px;flex-wrap:wrap}#connect-wechat{background:#32674a;color:#fff}#account-choice{margin:14px 0}#accounts{width:100%;padding:12px;font:inherit;border:1px solid #b8cabe;border-radius:8px}
+#setup-panel{border-top:1px solid #e0e8e2;margin-top:18px;padding-top:14px}#setup-panel summary{color:#586d60;cursor:pointer}#setup-panel label{display:block;margin:12px 0}#setup-panel input:not([type=checkbox]){display:block;width:100%;padding:10px;margin-top:6px;border:1px solid #b8cabe;border-radius:8px;font:inherit}#setup-panel p{line-height:1.7;color:#586d60}#progress-details{margin:14px 0}#progress-details summary{cursor:pointer;color:#586d60}#logs{height:220px}.privacy-note{display:block;margin-top:14px;line-height:1.8}
+
+#connection-card.connected{display:grid;grid-template-columns:1fr auto;gap:0 16px;padding:16px 20px}.connected .connection-top{grid-column:1/-1}.connected #connection-heading{font-size:16px;margin:0}.connected #connection-help{margin:8px 0;align-self:center;font-size:14px}.connected .connection-actions{grid-column:2;grid-row:2;align-self:center}.connected #setup-panel,.connected #account-choice{grid-column:1/-1}.connected #setup-panel{margin-top:8px;padding-top:10px}.connected .privacy-note{display:none}
+@media(max-width:740px){#connection-card.connected{display:block}.connected .connection-actions{margin-top:10px}}
 </style>
-<main><header><small>本机微信 / 轻量工作台</small><h1>选择群聊，生成聊天档案</h1><p>读取本机已同步的消息，整理图片、语音和附件。每次另存新档案。</p></header>
-<details id="setup-panel" style="background:white;padding:20px;border:1px solid #dce5df;border-radius:12px;margin-top:22px"><summary>首次配置 / 切换本机账号</summary>
-<p id="setup-note"></p><label>自动发现的数据目录 <select id="accounts" style="width:100%;padding:10px"></select></label>
-<label>微信 db_storage 目录 <input id="db-path" style="width:100%;padding:10px" placeholder="也可粘贴自定义数据路径"></label>
-<label>数据库密钥 JSON（只保存在本机） <input id="key-file" type="file" accept=".json,application/json"></label>
-<details><summary>高级：账号和图片参数</summary><label>自己的微信账号 ID（通常自动识别）<input id="own-id"></label><p>Windows 图片密钥单独配置；未配置时仍可导出文字和可用媒体。</p><label>图片 AES 密钥（32 位十六进制）<input id="image-key" type="password" autocomplete="off"></label><label>XOR 参数（0–255）<input id="xor-key" type="number" min="0" max="255" value="0"></label><label>导出目录（留空使用本机默认目录）<input id="output-path" style="width:100%"></label></details>
-<p><label><input id="asr" type="checkbox"> 本地语音转写（首次需联网下载模型）</label></p><button id="save-setup">校验并保存</button><p id="setup-status" role="status"></p></details><div class="layout"><section><h2>1. 选择群聊</h2><label for="search">搜索群名称</label><input id="search" type="search" placeholder="输入群名关键词"><div class="bar"><small id="count">正在读取群聊…</small><button id="refresh">刷新列表</button></div><div id="groups"></div><button id="start" disabled>导出所选群聊</button><p id="error" role="alert"></p></section>
-<section><h2>2. 查看结果</h2><p id="status" role="status">等待选择群聊</p><pre id="logs">导出后，进度会显示在这里。</pre><div id="results"></div><small>完成后自动打开聊天档案，也可点击上方结果入口。</small></section></div><footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。保持启动窗口运行。</footer></main>
+<main><header><small>只在本机处理</small><h1>导出微信聊天</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step">1. 连接微信</li><li id="step-select">2. 选聊天对象</li><li id="step-export">3. 一键导出</li></ol></header>
+<section id="connection-card" aria-labelledby="connection-heading"><div class="connection-top"><h2 id="connection-heading">1. 连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="copy-agent-prompt">复制连接提示词</button><button id="connect-wechat">我已完成，重新检测</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
+<p id="agent-prompt-status" role="status"></p><div id="agent-prompt-fallback" hidden><label for="agent-prompt-text">复制以下提示词，发给能操作本机的 Agent</label><textarea id="agent-prompt-text" readonly rows="8" style="width:100%"></textarea></div><div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
+<small class="privacy-note">聊天记录仅在本机读取和保存，本工具不主动上传聊天内容。复制的提示词不包含聊天原文或密钥，请勿分享密钥和导出文件。</small>
+<details id="setup-panel"><summary>高级设置（通常不用改）</summary><p id="setup-note"></p><button id="import-connection">导入已有连接文件（高级）</button><label>微信数据位置<input id="db-path" placeholder="仅在自动识别失败时填写"></label><label>自己的微信账号 ID<input id="own-id"></label><details><summary>图片与文件设置</summary><label>图片 AES 密钥<input id="image-key" type="password" autocomplete="off"></label><label>XOR 参数（0–255）<input id="xor-key" type="number" min="0" max="255" value="0"></label><label>保存位置（留空使用默认位置）<input id="output-path"></label></details><p><label><input id="asr" type="checkbox"> 把语音同时转成文字（更慢，首次需下载模型）</label></p><button id="save-setup">保存高级设置</button><p id="setup-status" role="status"></p></details></section>
+<div id="workspace" class="layout" hidden><section><h2>2. 选聊天对象</h2><label for="kind">会话类型</label> <select id="kind" style="min-height:44px;padding:8px;font:inherit;margin-bottom:6px"><option value="group">群聊</option><option value="contact" selected>联系人</option><option value="official">公众号（订阅号）</option><option value="service">服务号</option><option value="other">其他机构号／类型未明</option></select><small id="list-note">默认显示最近会话，按最近聊天排序。头像只读取本机缓存。</small><label id="search-label" for="search">搜索群名称或 ID</label><input id="search" type="search" placeholder="输入群名或 ID"><div class="list-options"><label for="scope">显示范围 <select id="scope"><option value="recent">最近会话（推荐）</option><option value="all">全部列表</option></select></label><label><input id="show-id" type="checkbox">显示账号 ID</label></div><div class="bar"><small id="count" aria-live="polite">正在读取群聊…</small><button id="refresh">刷新列表</button></div><div id="groups"></div><button id="more" hidden>显示更多</button><div class="bar"><small>切换类型会清空选择</small><button id="clear-selection" disabled>清空选择</button></div><button id="start" disabled>导出所选群聊</button><p id="error" role="alert"></p></section>
+<section><h2>3. 导出并查看</h2><p id="status" role="status">等待选择聊天对象</p><details id="progress-details"><summary>查看详细进度</summary><pre id="logs">导出后，进度会显示在这里。</pre></details><div id="results"></div><small>导出完成后会自动打开，也可以点击上方按钮查看。</small></section></div><footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。保持启动窗口运行。</footer></main>
 <script>
-const $=id=>document.getElementById(id);let groups=[],selected=new Set(),running=false;
-function render(){const q=$('search').value.toLowerCase();$('groups').replaceChildren();const visible=groups.filter(g=>g.name.toLowerCase().includes(q));for(const g of visible){const row=document.createElement('label');row.className='group';const box=document.createElement('input');box.type='checkbox';box.checked=selected.has(g.id);box.disabled=running;box.onchange=()=>{box.checked?selected.add(g.id):selected.delete(g.id);render();};const name=document.createElement('span');name.textContent=g.name;row.append(box,name);$('groups').append(row);}if(!visible.length)$('groups').textContent='没有匹配的群聊';$('count').textContent=visible.length+' 个群 · 已选 '+selected.size+' 个';$('start').disabled=running||!selected.size;}
-async function load(){try{$('error').textContent='';const r=await fetch('/api/groups'),d=await r.json();if(!r.ok)throw Error(d.error);groups=d.groups;selected=new Set([...selected].filter(id=>groups.some(g=>g.id===id)));render();}catch(e){$('error').textContent=e.message;$('count').textContent='读取失败';}}
-$('search').oninput=render;$('refresh').onclick=load;
+const $=id=>document.getElementById(id);let groups=[],selected=new Set(),running=false,loading=false,loadVersion=0,limit=80,matchingCount=0,connectionReady=false,connecting=false,setupData=null;
+const kindLabels={group:'群聊',contact:'联系人',official:'公众号（订阅号）',service:'服务号',other:'其他机构号／类型未明'};
+const selectionName=()=>kindLabels[$('kind').value];
+function updateControls(){
+  $('count').textContent=matchingCount+' 个'+selectionName()+' · 已选 '+selected.size+' 个';
+  $('start').textContent=running?'正在导出…':selected.size?'一键导出（已选 '+selected.size+' 个）':'先勾选要导出的聊天';$('start').disabled=!connectionReady||running||loading||!selected.size;
+  $('kind').disabled=!connectionReady||running||loading;$('refresh').disabled=!connectionReady||running||loading;$('search').disabled=!connectionReady||running||loading;
+  $('scope').disabled=!connectionReady||running||loading;$('clear-selection').disabled=running||loading||!selected.size;
+  $('connect-wechat').disabled=running||loading||connecting;$('import-connection').disabled=running||loading||connecting;$('switch-account').disabled=running||loading||connecting;$('accounts').disabled=running||loading||connecting;$('save-setup').disabled=running||connecting;
+  $('step-connect').setAttribute('aria-current',connectionReady?'false':'step');$('step-select').setAttribute('aria-current',connectionReady&&!selected.size?'step':'false');$('step-export').setAttribute('aria-current',connectionReady&&selected.size?'step':'false');
+}
+function render(){
+  const q=$('search').value.trim().toLowerCase(),label=selectionName();
+  $('search-label').textContent='搜索'+label+'名称、备注或 ID';$('search').placeholder='输入'+label+'关键词或 ID';
+  const recentAvailable=groups.some(g=>g.has_history!==null&&g.has_history!==undefined);
+  $('list-note').textContent=recentAvailable?'默认显示最近会话，按最近聊天排序。头像只读取本机缓存；全部列表可能包含群成员或缺少名称的旧会话。':'未读到最近会话信息，暂显示全部列表。头像只读取本机缓存。';
+  const visible=groups.filter(g=>($('scope').value==='all'||g.has_history!==false)&&[g.name,g.nickname,g.id].some(v=>(v||'').toLowerCase().includes(q)));
+  matchingCount=visible.length;const scroll=$('groups').scrollTop;$('groups').replaceChildren();
+  for(const g of visible.slice(0,limit)){
+    const row=document.createElement('label');row.className='group'+(selected.has(g.id)?' is-selected':'');row.title=g.name+' · '+g.id;
+    const box=document.createElement('input');box.type='checkbox';box.checked=selected.has(g.id);box.disabled=!connectionReady||running||loading;box.setAttribute('aria-label','选择'+g.name+'，账号 '+g.id);
+    box.onchange=()=>{box.checked?selected.add(g.id):selected.delete(g.id);row.classList.toggle('is-selected',box.checked);updateControls();};
+    const picture=document.createElement('span');picture.className='avatar';if(g.kind==='group')picture.classList.add('group-avatar');picture.setAttribute('aria-hidden','true');picture.textContent=g.kind==='group'?'群':g.named?Array.from(g.name)[0]:'人';
+    const img=document.createElement('img');img.alt='';img.width=44;img.height=44;img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.src='/api/avatar/'+encodeURIComponent(g.id);img.onerror=()=>img.remove();picture.append(img);
+    const copy=document.createElement('span');copy.className='contact-copy';const name=document.createElement('span');name.className='contact-name';name.textContent=g.name;
+    const detail=document.createElement('span');detail.className='contact-detail';detail.textContent=(g.account_label||label)+(g.named?(g.nickname&&g.nickname!==g.name?' · 昵称：'+g.nickname:''):' · 账号：'+g.id);
+    if(g.named&&$('show-id').checked)detail.textContent+=' · '+g.id;copy.append(name,detail);row.append(box,picture,copy);
+    if(g.last_active){const time=document.createElement('span');time.className='last-active';time.textContent=new Date(g.last_active*1000).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});row.append(time);}
+    $('groups').append(row);
+  }
+  if(!visible.length){const empty=document.createElement('div');empty.id='empty';empty.textContent=loading?'正在读取'+label+'…':'没有匹配的'+label+($('scope').value==='recent'?'，可切换到“全部列表”查找。':'。');$('groups').append(empty);}
+  $('groups').scrollTop=scroll;$('more').hidden=visible.length<=limit;$('more').textContent='显示更多（还有 '+Math.max(0,visible.length-limit)+' 个）';updateControls();
+}
+async function load(){const version=++loadVersion;loading=true;groups=[];render();try{$('error').textContent='';const kind=$('kind').value,r=await fetch(kind==='group'?'/api/groups':'/api/accounts'),d=await r.json();if(version!==loadVersion)return;if(!r.ok)throw Error(d.error);groups=kind==='group'?d.groups:d.accounts.filter(g=>g.kind===kind);selected=new Set([...selected].filter(id=>groups.some(g=>g.id===id)));return true;}catch(e){if(version===loadVersion){selected.clear();$('error').textContent=friendlyError(e.message);$('setup-status').textContent=e.message;}return false;}finally{if(version===loadVersion){loading=false;render();}}}
+$('search').oninput=()=>{limit=80;render();};$('refresh').onclick=load;
+$('scope').onchange=()=>{limit=80;render();};$('show-id').onchange=render;$('more').onclick=()=>{limit+=80;render();};$('clear-selection').onclick=()=>{selected.clear();render();};
+$('kind').onchange=()=>{selected.clear();limit=80;$('search').value='';load();};
 $('start').onclick=async()=>{running=true;render();$('error').textContent='';try{const r=await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selected]})});const d=await r.json();if(!r.ok)throw Error(d.error);poll();}catch(e){running=false;render();$('error').textContent=e.message;}};
-async function poll(){try{const d=await(await fetch('/api/status')).json();running=d.status==='running';$('status').textContent={idle:'等待选择群聊',running:'正在导出，请稍候…',done:'导出完成',failed:'导出未完成，请查看记录'}[d.status];$('logs').textContent=d.logs.join('\n')||'导出后，进度会显示在这里。';$('logs').scrollTop=$('logs').scrollHeight;$('results').replaceChildren();for(const result of d.results){const a=document.createElement('a');a.className='result';a.textContent='打开 '+result.name;a.href=result.url;a.target='_blank';a.rel='noopener';$('results').append(a);}render();}catch(e){$('status').textContent='工作台连接已断开，请检查启动窗口';}}
-async function setup(){try{const d=await(await fetch('/api/setup')).json();$('setup-note').textContent='目标微信 '+d.target_version+' · '+(d.platform==='windows'?'Windows 读取适配待实机验证':'Mac')+'。密钥需从已有备份或可信本机工具取得；此版本不自动获取。';$('setup-panel').open=!d.configured;$('db-path').value=d.config.db_storage||d.accounts[0]||'';$('own-id').value=d.config.own_id||'';$('output-path').value=d.config.output_dir||'';$('asr').checked=!!d.config.transcribe;$('accounts').replaceChildren();for(const path of d.accounts){const o=document.createElement('option');o.value=path;o.textContent=path;$('accounts').append(o);}$('accounts').onchange=()=>{$('db-path').value=$('accounts').value;};if(d.configured)load();else{$('count').textContent='请先完成配置';}}catch(e){$('setup-status').textContent=e.message;}}
-$('save-setup').onclick=async()=>{const b=$('save-setup');b.disabled=true;try{$('setup-status').textContent='校验本机数据库…';const keyFile=$('key-file').files[0];const config={db_storage:$('db-path').value,own_id:$('own-id').value,output_dir:$('output-path').value,transcribe:$('asr').checked};if($('image-key').value){config.image_key=$('image-key').value;config.xor_key=Number($('xor-key').value);}const r=await fetch('/api/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({config,keys:keyFile?JSON.parse(await keyFile.text()):null})});const d=await r.json();if(!r.ok)throw Error(d.error);$('setup-status').textContent='配置已保存，可以选择群聊了。';$('image-key').value='';$('key-file').value='';await load();}catch(e){$('setup-status').textContent=e.message;}finally{b.disabled=false;}};
+async function poll(){try{const d=await(await fetch('/api/status')).json();const wasRunning=running;running=d.status==='running';$('status').textContent={idle:'等待选择聊天对象',running:'正在整理聊天，请保持窗口打开…',done:'导出好了',failed:'没有完成导出，可展开详细进度查看原因'}[d.status];$('logs').textContent=d.logs.join('\n')||'导出后，进度会显示在这里。';$('logs').scrollTop=$('logs').scrollHeight;$('results').replaceChildren();for(const result of d.results){const a=document.createElement('a');a.className='result';a.textContent='查看聊天档案：'+result.name;a.href=result.url;a.target='_blank';a.rel='noopener';$('results').append(a);}if(wasRunning!==running)render();}catch(e){$('status').textContent='工作台连接已断开，请检查启动窗口';}}
+function friendlyError(message){
+  if(/权限|拒绝|unable to open/i.test(message))return '暂时无法读取微信。请确认电脑版微信已登录，并允许当前启动工具读取微信数据后重试。';
+  if(/密钥|keys|解密/i.test(message))return '连接文件不可用或已失效，请重新导入连接文件。';
+  return '暂时没有连上微信。请先打开并登录电脑版微信，再点“重试连接”；仍不成功可展开高级设置查看原因。';
+}
+function showConnection(ready,help){
+  connectionReady=ready;$('connection-card').classList.toggle('connected',ready);$('connection-status').textContent=ready?'已连接':'还未连接';$('connection-status').classList.toggle('ready',ready);
+  $('connection-help').textContent=help;$('connect-wechat').textContent=ready?'重新检查连接':'我已完成，重新检测';$('copy-agent-prompt').hidden=ready;if(ready){$('agent-prompt-status').textContent='';$('agent-prompt-fallback').hidden=true;}$('workspace').hidden=!ready;
+  $('import-connection').hidden=ready;$('switch-account').hidden=!ready;$('setup-panel').open=false;render();
+}
+async function setup(){
+  try{
+    const r=await fetch('/api/setup'),d=await r.json();if(!r.ok)throw Error(d.error);setupData=d;
+    $('setup-note').textContent='已适配目标微信 '+d.target_version+'。'+(d.platform==='windows'?'Windows 读取适配尚待实机验证。':'')+'这里只用于排查连接问题；本版本不自动获取连接文件。';
+    $('db-path').value=d.config.db_storage||d.accounts[0]||'';$('own-id').value=d.config.own_id||'';$('output-path').value=d.config.output_dir||'';$('asr').checked=!!d.config.transcribe;
+    $('accounts').replaceChildren();const paths=[...new Set([...(d.config.db_storage?[d.config.db_storage]:[]),...d.accounts])];
+    for(const [index,path] of paths.entries()){const o=document.createElement('option');o.value=path;const account=path.split(/[\\/]/).filter(Boolean).slice(-2,-1)[0]||'';o.textContent='微信账号 '+(index+1)+'（'+account.slice(-6)+'）';$('accounts').append(o);}
+    $('account-choice').hidden=d.configured||paths.length<=1;
+    if(d.configured){const ok=await load();showConnection(ok,ok?'已连接这台电脑的微信。下面选好聊天对象，就可以导出。':friendlyError($('setup-status').textContent));}
+    else showConnection(false,paths.length?'已找到本机微信，但读取权限和解密信息尚未全部验证。复制提示词，让 Agent 帮你完成连接。':'还没找到可读取的微信。请先登录电脑版微信，或复制提示词让 Agent 协助检查。');
+  }catch(e){$('setup-status').textContent=e.message;showConnection(false,friendlyError(e.message));}
+}
+async function saveSetup(){
+  const keyFile=$('key-file').files[0];
+  if(!$('db-path').value){showConnection(false,'还没找到微信数据。请先打开并登录电脑版微信，再重试。');return;}
+  if(!keyFile&&!setupData?.configured){showConnection(false,'尚未完成首次连接，请先复制提示词让 Agent 帮你检查权限和解密信息。');return;}
+  connecting=true;updateControls();$('connection-status').textContent='正在连接';$('connection-help').textContent='正在检查这台电脑上的微信，请稍候…';
+  try{
+    const config={db_storage:$('db-path').value,own_id:$('own-id').value,output_dir:$('output-path').value,transcribe:$('asr').checked};
+    if($('image-key').value){config.image_key=$('image-key').value;config.xor_key=Number($('xor-key').value);}
+    let keys=null;if(keyFile){try{keys=JSON.parse(await keyFile.text());}catch(e){showConnection(false,'这个连接文件无法识别，请重新选择。');return;}}
+    const r=await fetch('/api/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({config,keys})}),d=await r.json();
+    if(!r.ok)throw Error(d.error);$('setup-status').textContent='连接已保存。';$('image-key').value='';$('key-file').value='';selected.clear();await setup();
+  }catch(e){$('setup-status').textContent=e.message;showConnection(false,friendlyError(e.message));}
+  finally{connecting=false;updateControls();}
+}
+async function connectWechat(){
+  if(connecting||running)return;
+  if(!setupData?.configured&&!$('key-file').files[0]){await setup();return;}
+  if(!$('key-file').files[0]&&setupData?.configured&&$('db-path').value===setupData.config.db_storage){connecting=true;updateControls();try{await setup();}finally{connecting=false;updateControls();}return;}
+  await saveSetup();
+}
+async function copyConnectionPrompt(){
+  const prompt=`请直接完成这台电脑上 WMR 的首次连接，不要只分析、安装或打开页面。仅处理本人授权的本机微信，不自动导出聊天。
+
+开始先询问用户并等待回答：“你希望以后怎么打开？A. 安装/复用 App，并在桌面放一个双击启动入口（推荐）；B. 不要桌面入口，保留现有启动方式。桌面入口只是快捷方式，不会再复制一份 App。”在回答前不要安装或创建入口；选择 B 时不擅自打包 App。
+用户选 A：复用确切的现有 App；没有 App 时按安装说明构建到 ~/Applications/WeChatChatkit.app。按本机文件管理约定选择桌面位置（本机为 ~/Desktop/Today），创建指向该 App 的 Finder 替身或符号链接，不复制、移动 App，不覆盖同名文件；有冲突先问用户。授权对象始终是实际 App，而不是桌面快捷方式。
+用户选 B：已有 App 就直接使用；源码方式先阅读仓库实际启动入口，给出已核实的完整命令、工作目录与所需终端，不编造启动命令。绑定当前源码进程而非假设存在 App，相关权限由实际执行宿主承接；后文 App 路径均按所选方式解释。
+无论选择哪项，完成后都要告诉用户：下次具体双击哪个图标/打开哪个绝对路径，或执行哪条完整命令；先登录微信，启动后等待浏览器自动打开，保留后台进程；端口可能变化，不让用户收藏临时 127.0.0.1 端口作为长期入口。若连接尚未完成，也交代如何再次启动继续配置。桌面入口尚未创建或启动未实测时，不宣称已创建/已验证。
+
+执行原则：复用当前项目、现有 App 和虚拟环境；不另建副本，不升级依赖，不重装已可用 App，不扫描整块磁盘。先列出“项目绝对路径、目标 App 绝对路径、该 App 的 PID、本机监听端口”，后续只操作这一实例。缺哪个只补哪个。每步只报告通过/失败及脱敏原因，不输出密钥、账号名称或聊天内容。
+
+0. 固定入口
+优先使用当前已下载仓库，阅读 docs/INSTALL.md 的“标准连接流程”。已有页面时，先确认提供该页面的进程和启动路径；浏览器地址不是 App 身份证明。不要把其他测试副本混进来。只有尚未安装且用户需要安装时，才依次执行 bash install.command --check、bash install.command；已安装则跳过构建。源码依赖优先用仓库 .venv/bin/python。目标为 Apple Silicon/macOS 13+；文档目标微信 4.1.13，其他版本不能直接宣称兼容，也不要擅自降级，用后续只读验证判断。
+
+1. 先分清权限问题，不要先猜密钥
+让用户确认本人微信已登录。用项目 scripts/multimodal/portable.py 的 discover_accounts() 检查目录；Mac 默认根目录为 ~/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/，目标是账号下含 contact/contact.db 的 db_storage。只检查相关目录。Operation not permitted 表示当前执行宿主的读取受限，不证明密钥错误；目录为空也可能是未登录、路径不同，不能直接断言缺权限。
+需要授权时，只引导用户打开“系统设置→隐私与安全性→完全磁盘访问权限”，点 +，用 Command+Shift+G 输入目标 App 所在目录，选中前面固定的那一个 App 并开启。不要索取密码，不读写 TCC 数据库。Agent 宿主（如 WorkBuddy）只有确实需要直接验证数据库且用户同意时才单独授权；宿主能读不代表 App 能读。
+授权后重启目标 App（先确认没有导出任务），重新绑定 PID/端口，GET /api/setup 看 accounts 是否发现目录。若宿主能读而 App 的 accounts 为空，优先核对授权的是否是另一个同名旧 App；让用户核对后重新添加确切路径，不重复重装、不自动删除其他授权或结束其他实例。
+
+2. 有限定位本人已有密钥，不重新研究采集工具
+按顺序检查：~/Library/Application Support/WeChatChatkit/settings.json 与 keys.json；用户明确提供的本人备份；当前项目 portable.load_settings() 已声明的旧版配置位置。旧项目回退为旧项目根目录/config/wechat-auto-export.json 和 data/wechat-live/data/state/candidates.json，只有明确定位到本人的旧项目时才使用，不能假定新人一定有。CHATKIT_USER_DIR 会禁用默认旧版回退；不要为了尝试而修改环境或覆盖配置。
+使用 portable.parse_keys() 在内存解析候选数组/映射，只输出数量与格式检查结果。不要 cat 密钥文件，不把密钥放入命令行参数、提示词、日志、临时明文文件或 Git。没有任何有效候选时立即停止并报告“缺少数据库密钥；当前公开项目没有通用自动获取器”，请求用户提供本人备份或明确批准一个已确认适配的方案；不要无限搜索或安装 Frida、修改/重签名微信、关闭 SIP/Gatekeeper。提示词本身不能补齐这个能力。
+
+3. 用全部候选逐库验证，不把一把密钥套到所有库
+复用项目 run.connect(path,key)，对联系人库 contact/contact.db、会话库 session/session.db，以及实际存在的 message/message_*.db 分别尝试候选（每库每候选最多一次）；可复用 launcher.connect_aux(path,keys)。用只读 schema/计数查询验证，只报告各类库成功数/失败数，不打印表中记录。联系人成功但会话失败时继续尝试其他候选，不立即认定整组密钥失效。不要丢掉其他库需要的候选，保存完整有效候选集合。无关的旧迁移库失败不等于主流程失败；必需库失败必须明确说明，不能笼统宣称全部可用。升级时间或候选编号不能替代实测。
+
+4. 保存到同一个 App，再以 App 自身验收
+先 GET 固定实例的 /api/setup；保存使用同一实例 POST /api/setup，JSON 为 {"config":{"db_storage":"实际发现的目录","transcribe":false},"keys":{"candidates":[完整候选]}}。请求必须带 Origin: http://127.0.0.1:实际端口；用 Python 在内存读取密钥并组装请求，不在 shell 参数或日志展开请求体。保留已有用户选项；不要覆盖同目录已有图片参数，不猜 own_id、图片 AES 或 XOR。正常连接不要求用户填满高级表单；本轮不启用语音模型下载。
+保存返回 ok:true 仍不足以结束：继续请求同一实例 GET /api/accounts、GET /api/groups（只输出 HTTP 状态及列表数量，不展示内容），确认无解密错误。零条可以是合法结果，不能为了数量好看造数据；数据库只读验证也必须通过。若 shell 验证成功而 App 报密钥错误，先回查第1步 App 本身的权限及账号发现，不重新采集密钥。
+
+5. 停止条件与交付
+同一错误最多原样重试一次，失败后改变诊断依据；不能反复重装、递归阅读源码或无边界找工具。需要系统授权时一次给出确切 App 路径和操作步骤，等待用户完成，授权后继续未完成步骤，不从安装重来。
+最后只报告：用户选择的启动方式、桌面入口实际位置（如有）、下次启动步骤、目标 App 或源码入口路径与当前页面地址；权限/联系人库/会话库/消息库验证结果；连接成功或唯一阻碍及下一步。成功后打开该实例页面，让用户点“我已完成，重新检测”进入联系人/群聊选择。不要自动导出，不记录密钥到工作日志，不提交用户配置。聊天与密钥仅在本机处理；本工具不主动上传，但不能承诺任何情况下绝不泄漏。
+
+已知本机案例（不是所有用户的保证）：曾用已有候选集合逐库成功验证；一次失败来自完全磁盘访问权限授给同名旧测试 App，重新授权确切正式 App 后恢复。该案例没有验证全新机器无密钥时的自动采集能力。`;
+  try{await navigator.clipboard.writeText(prompt);$('agent-prompt-status').textContent='已复制。发给能够操作这台电脑的 Agent，完成后点击“我已完成，重新检测”。';}
+  catch(e){$('agent-prompt-text').value=prompt;$('agent-prompt-fallback').hidden=false;$('agent-prompt-text').focus();$('agent-prompt-text').select();$('agent-prompt-status').textContent='浏览器未允许自动复制，请复制下方提示词。';}
+}
+$('copy-agent-prompt').onclick=copyConnectionPrompt;
+$('connect-wechat').onclick=connectWechat;$('save-setup').onclick=saveSetup;$('import-connection').onclick=()=>$('key-file').click();$('key-file').onchange=connectWechat;
+$('switch-account').onclick=()=>{$('account-choice').hidden=!$('account-choice').hidden;$('import-connection').hidden=false;};
+$('accounts').onchange=()=>{$('db-path').value=$('accounts').value;showConnection(false,'已选好微信账号，点击“重试连接”。如果无法连接，请导入这个账号的连接文件。');};
 setup();poll();setInterval(poll,1500);
 </script></html>

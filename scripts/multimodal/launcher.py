@@ -1,4 +1,4 @@
-"""Lightweight local group picker; reuses the existing exporter."""
+"""Lightweight local conversation picker; reuses the existing exporter."""
 import json
 import os
 import subprocess
@@ -17,13 +17,95 @@ if '--export' in sys.argv and os.environ.get('CHATKIT_EXPORT_LOG'):
 
 import run
 from portable import (ROOT, user_dir, load_settings, load_keys, discover_accounts,
-                      parse_keys, save_settings, TARGET_VERSION)
+                      parse_keys, save_settings, account_id, TARGET_VERSION)
 
 state = dict(status='idle', logs=[], results=[])
 lock = threading.Lock()
 
 
-def groups():
+# Keep only key choices in memory; all auxiliary databases remain read-only.
+aux_keys = {}
+
+
+def connect_aux(path, keys):
+    if not path.is_file():
+        return None
+    cache_id = (str(path), tuple(keys))
+    preferred = aux_keys.get(cache_id)
+    for key in ([preferred] if preferred else []) + [k for k in keys if k != preferred]:
+        try:
+            conn = run.connect(path, key)
+            aux_keys[cache_id] = key
+            return conn
+        except (run.sqlcipher3.DatabaseError, OSError):
+            continue
+    return None
+
+
+def recent_activity(dbroot, keys):
+    conn = connect_aux(dbroot / 'session/session.db', keys)
+    if conn is None:
+        return None
+    try:
+        columns = {r[1] for r in conn.execute('PRAGMA table_info(SessionTable)')}
+        if not {'username', 'last_timestamp'} <= columns:
+            return None
+        return dict(conn.execute('SELECT username,last_timestamp FROM SessionTable WHERE last_timestamp>0'))
+    except run.sqlcipher3.DatabaseError:
+        return None
+    finally:
+        conn.close()
+
+
+def avatar(username):
+    if not username or len(username) > 256 or '/' in username or '\x00' in username:
+        return None
+    cfg = load_settings()
+    conn = connect_aux(Path(cfg['db_storage']) / 'head_image/head_image.db', load_keys(cfg))
+    if conn is None:
+        return None
+    try:
+        row = conn.execute('SELECT image_buffer FROM head_image WHERE username=?', (username,)).fetchone()
+        if not row or not isinstance(row[0], (bytes, bytearray, memoryview)) or not row[0] or len(row[0]) > 2 * 1024 * 1024:
+            return None
+        data = bytes(row[0])
+        if data.startswith(b'\xff\xd8\xff'):
+            mime = 'image/jpeg'
+        elif data.startswith(b'\x89PNG\r\n\x1a\n'):
+            mime = 'image/png'
+        elif data.startswith((b'GIF87a', b'GIF89a')):
+            mime = 'image/gif'
+        elif data.startswith(b'RIFF') and data[8:12] == b'WEBP':
+            mime = 'image/webp'
+        else:
+            return None
+        return data, mime
+    except run.sqlcipher3.DatabaseError:
+        return None
+    finally:
+        conn.close()
+
+
+
+def account_kind(username, biz_type=None, verify_flag=0, known_business=False):
+    """Local biz_info types, not the unrelated public-platform API enums."""
+    if username.endswith('@chatroom'):
+        return 'group'
+    if biz_type == 0:
+        return 'official'
+    if biz_type == 1:
+        return 'service'
+    # Missing/unsupported business metadata must not masquerade as a person.
+    if known_business or username.startswith('gh_') or (verify_flag or 0) & 8:
+        return 'other'
+    return 'contact'
+
+
+ACCOUNT_LABELS = {'group': '群聊', 'contact': '联系人', 'official': '公众号（订阅号）',
+                  'service': '服务号', 'other': '其他机构号／类型未明'}
+
+
+def conversations():
     cfg = load_settings()
     db = Path(cfg['db_storage']) / 'contact/contact.db'
     try:
@@ -37,10 +119,27 @@ def groups():
         try:
             conn = run.connect(db, key)
             try:
-                if not {'username', 'nick_name', 'remark'} <= {r[1] for r in conn.execute('PRAGMA table_info(contact)')}:
+                columns = {r[1] for r in conn.execute('PRAGMA table_info(contact)')}
+                if not {'username', 'nick_name', 'remark'} <= columns:
                     raise RuntimeError('联系人表结构尚未适配，请反馈微信完整版本号；不会猜测读取')
-                rows = conn.execute("SELECT username,nick_name,remark FROM contact WHERE username LIKE '%@chatroom' ORDER BY nick_name").fetchall()
-                return [dict(id=id, name=remark or nick or id) for id, nick, remark in rows]
+                flag = 'verify_flag' if 'verify_flag' in columns else '0'
+                rows = conn.execute('SELECT username,nick_name,remark,' + flag + ' FROM contact ORDER BY nick_name,username').fetchall()
+                biz_columns = {r[1] for r in conn.execute('PRAGMA table_info(biz_info)')}
+                business = dict(conn.execute('SELECT username,type FROM biz_info')) if {'username', 'type'} <= biz_columns else {}
+                own = account_id(Path(cfg['db_storage']).parent, cfg)
+                recent = recent_activity(Path(cfg['db_storage']), keys)
+                items = []
+                for id, nick, remark, verify_flag in rows:
+                    if not id or id == own:
+                        continue
+                    kind = account_kind(id, business.get(id), verify_flag, id in business)
+                    name = (remark or '').strip() or (nick or '').strip()
+                    named = bool(name and name != id)
+                    items.append(dict(id=id, name=name if named else ('未命名'+ACCOUNT_LABELS[kind]),
+                                      nickname=nick or '', kind=kind, account_label=ACCOUNT_LABELS[kind], named=named,
+                                      has_history=id in recent if recent is not None else None,
+                                      last_active=recent.get(id, 0) if recent is not None else 0))
+                return sorted(items, key=lambda item: (-item['last_active'], not item['named'], item['name'].casefold(), item['id']))
             finally:
                 conn.close()
         except run.sqlcipher3.DatabaseError as exc:
@@ -49,6 +148,18 @@ def groups():
     if 'unable to open' in last_error.lower() or 'authorization' in last_error.lower():
         raise RuntimeError('无法打开微信数据库。桌面入口由终端启动，请检查终端的完全磁盘访问权限。错误：' + last_error)
     raise RuntimeError('微信数据库读取失败：' + last_error + '。可能是密钥失效或数据库暂不可用。')
+
+
+def groups():
+    return [item for item in conversations() if item['kind'] == 'group']
+
+
+def contacts():
+    return [item for item in conversations() if item['kind'] == 'contact']
+
+
+def accounts():
+    return [item for item in conversations() if item['kind'] != 'group']
 
 
 def export(ids):
@@ -113,9 +224,35 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_error(403)
             return
         path = urlsplit(self.path).path
-        if path == '/api/groups':
+        if path.startswith('/api/avatar/'):
+            try:
+                asset = avatar(unquote(path[len('/api/avatar/'):]))
+            except (RuntimeError, OSError):
+                asset = None
+            if asset is None:
+                self.send_error(404)
+                return
+            data, mime = asset
+            self.send_response(200)
+            self.send_header('Content-Type', mime)
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'private, no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.end_headers()
+            self.wfile.write(data)
+        elif path == '/api/groups':
             try:
                 self.reply(dict(groups=groups()))
+            except Exception as exc:
+                self.reply(dict(error=str(exc)), 500)
+        elif path == '/api/accounts':
+            try:
+                self.reply(dict(accounts=accounts()))
+            except Exception as exc:
+                self.reply(dict(error=str(exc)), 500)
+        elif path == '/api/contacts':
+            try:
+                self.reply(dict(contacts=contacts()))
             except Exception as exc:
                 self.reply(dict(error=str(exc)), 500)
         elif path == '/api/setup':
@@ -216,10 +353,10 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             ids = body.get('ids')
             if not isinstance(ids, list) or not ids or any(not isinstance(id, str) for id in ids):
-                raise ValueError('请选择群聊')
-            available = {g['id'] for g in groups()}
+                raise ValueError('请选择联系人或群聊')
+            available = {g['id'] for g in conversations()}
             if any(id not in available for id in ids):
-                raise ValueError('群聊列表已变化，请刷新列表')
+                raise ValueError('联系人或群聊列表已变化，请刷新列表')
             with lock:
                 if state['status'] == 'running':
                     self.reply(dict(error='已有导出正在进行'), 409)

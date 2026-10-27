@@ -131,7 +131,9 @@ def main():
         raise RuntimeError('联系人数据库格式尚未适配，请记录微信完整版本号后反馈')
     targets = []
     for query in args.contact:
-        rows = contact.execute('SELECT username,nick_name,remark FROM contact WHERE username=? OR nick_name=? OR remark=?', (query,) * 3).fetchall()
+        rows = contact.execute('SELECT username,nick_name,remark FROM contact WHERE username=?', (query,)).fetchall()
+        if not rows:
+            rows = contact.execute('SELECT username,nick_name,remark FROM contact WHERE nick_name=? OR remark=?', (query,) * 2).fetchall()
         if len(rows) != 1:
             raise RuntimeError('目标未唯一匹配：' + query)
         targets.append(rows[0])
