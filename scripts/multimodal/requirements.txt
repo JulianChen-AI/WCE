@@ -1,0 +1,5 @@
+pycryptodome==3.23.0
+silk-python==0.2.8
+av==15.1.0
+pillow==11.3.0
+# Also requires existing auto-export runtime: sqlcipher3 and zstandard.

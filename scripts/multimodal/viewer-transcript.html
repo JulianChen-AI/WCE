@@ -1,0 +1,81 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>语音转文字预览</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#26332e;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}aside{position:fixed;width:290px;inset:0 auto 0 0;background:#fff;border-right:1px solid #e4e9e6;padding:32px 24px;overflow:auto}.brand{color:#458268;font-size:12px;letter-spacing:2px}h1{font-size:25px;margin:24px 0 9px}p{color:#77837d;font-size:13px;line-height:1.7}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:24px 0}.stat{background:#f4f7f5;padding:15px;border-radius:12px}.stat strong{display:block;font-size:25px;margin-bottom:5px}.stat span{font-size:12px;color:#758079}label{display:block;font-size:12px;color:#77837d;margin:18px 0 7px}input,select{width:100%;padding:11px;border:1px solid #dce3df;border-radius:8px;background:white;color:#26332e}main{margin-left:290px;max-width:1100px;padding:30px 38px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.pill{background:#e4eee8;color:#47735a;font-size:12px;padding:7px 11px;border-radius:20px}.day{text-align:center;color:#87918b;font-size:12px;margin:25px 0}.row{display:flex;gap:10px;margin:15px 0;align-items:flex-start}.row.me{flex-direction:row-reverse}.avatar{flex:0 0 35px;height:35px;border-radius:10px;background:#dce8e0;display:grid;place-items:center;color:#4b6757;font-size:13px}.body{max-width:78%;min-width:100px}.me .body{text-align:right}.name{font-size:11px;color:#87918b;margin:0 3px 5px}.bubble{display:inline-block;text-align:left;background:white;border:1px solid #e7ece9;border-radius:3px 13px 13px;padding:12px 15px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}.me .bubble{background:#e0efdf;border-color:#d5e5d4;border-radius:13px 3px 13px 13px}.bubble img{max-width:100%;max-height:340px;border-radius:7px;display:block}.bubble video{max-width:100%;max-height:360px}.bubble audio{max-width:100%;width:280px}.time{font-size:10px;color:#9aa29d;margin:5px 3px}.missing{font-size:12px;color:#a17b48;margin-top:7px}.quote{border-left:3px solid #becac3;padding-left:9px;font-size:12px;color:#718076;margin-top:8px}.system{text-align:center;color:#959e97;font-size:12px;margin:15px}button{background:#fff;border:1px solid #d5dfd8;border-radius:9px;padding:11px 23px;color:#45664f;cursor:pointer}footer{text-align:center;padding:24px}details{font-size:12px;color:#829087;margin-top:24px;line-height:1.8}a{color:#397d59}@media(max-width:760px){aside{position:static;width:auto;padding:20px}main{margin:0;padding:20px}.stats{margin:14px 0}h1{margin:12px 0}.body{max-width:85%}aside details{display:none}}
+</style>
+<aside><div class="brand">CHAT ARCHIVE / 本地档案</div><h1 id="peer"></h1><p id="range"></p><div class="stats"><div class="stat"><strong id="total"></strong><span>消息总数</span></div><div class="stat"><strong id="media"></strong><span>可用媒体</span></div></div><a id="export-all" href="完整聊天档案.zip" download style="display:block;text-align:center;padding:12px;border:1px solid #d5dfd8;border-radius:9px;text-decoration:none">导出全部（原大小）</a><p style="font-size:12px">导出本群全部消息及已采集媒体，不受筛选影响。</p><label>搜索聊天</label><input id="search" placeholder="输入关键词"><label>消息类型（可多选）</label><select id="type" multiple size="6" aria-label="消息类型，可多选"><option value="transcribed">已转写语音</option><option value="">全部消息</option></select><label for="availability">加载状态</label><select id="availability"><option value="">全部消息</option><option value="missing">未成功加载</option></select><label for="member">成员（可多选）</label><select id="member" multiple size="5" aria-label="成员，可多选"><option value="">全部成员</option></select><label>开始日期</label><input id="date" type="date"><label>结束日期</label><input id="date-end" type="date"><label for="export-size">导出图片大小</label><select id="export-size"><option value="original">原大小</option><option value="light">轻度 · 2048px / 85%</option><option value="balanced">均衡 · 1600px / 80%</option></select><button id="export-filtered" style="width:100%;margin-top:16px">导出筛选结果</button><p id="export-status" role="status"></p><p id="status"></p><details><summary>导出范围与缺失说明</summary><div id="notes"></div></details></aside>
+<main><header><b>聊天时间线</b><span class="pill">语音转文字 · 本地预览</span></header><div id="list"></div><footer><button id="more">加载更多</button></footer></main>
+<script id="data" type="application/json">__CHAT_DATA__</script><script>
+const {meta,messages}=JSON.parse(document.getElementById('data').textContent),$=id=>document.getElementById(id);const labels={text:'文字',image:'图片',voice:'语音',video:'视频',emoji:'表情',file:'文件',quote:'引用',link:'链接',system:'系统',call:'通话',miniprogram:'小程序',forward:'聊天记录'};document.title=meta.peer+' · 聊天档案';$('peer').textContent=meta.peer;$('range').textContent=meta.scope+' · 北京时间\n'+meta.start+' — '+meta.end;$('total').textContent=meta.count;$('media').textContent=Object.values(meta.ready).reduce((a,b)=>a+b,0);$('notes').textContent=('本轮仅转写最近 '+meta.transcription.selected+' 条可用语音，成功 '+meta.transcription.success+' 条；其余保留原音频。')+meta.limitations.join('；')+'。未匹配数据库：'+(meta.unmatched_databases.join('、')||'无');for(const [key,count] of Object.entries(meta.counts)){let o=document.createElement('option');o.value=key;o.textContent=(labels[key]||key)+' · '+count;$('type').append(o)}
+const memberNames=new Map();for(const m of messages){if(m.role==='system')continue;const id=m.sender_id||m.sender;if(id&&!memberNames.has(id))memberNames.set(id,m.sender||id);}const nameCounts=new Map();for(const name of memberNames.values())nameCounts.set(name,(nameCounts.get(name)||0)+1);for(const [id,name] of memberNames){const o=document.createElement('option');o.value=id;o.textContent=name+(nameCounts.get(name)>1?' ('+id+')':'');$('member').append(o);}
+function selectedValues(id){return Array.from($(id).selectedOptions,o=>o.value).filter(Boolean);}for(const id of ['type','member']){$(id).addEventListener('mousedown',event=>{const option=event.target.closest('option');if(!option)return;event.preventDefault();if(!option.value){for(const o of $(id).options)o.selected=false;option.selected=true;}else{option.selected=!option.selected;$(id).options[0].selected=false;}$(id).dispatchEvent(new Event('input'));});}
+let filtered=messages,shown=0,lastDay='';const node=(tag,cls,text)=>{let e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};function safePath(p){return typeof p==='string'&&/^media\/[a-z_]+\/[a-zA-Z0-9_.-]+$/.test(p)&&!p.includes('..')?p:null}function render(){for(const m of filtered.slice(shown,shown+150)){let day=m.time.slice(0,10);if(day!==lastDay){$('list').append(node('div','day',day));lastDay=day}if(m.role==='system'){$('list').append(node('div','system',m.text));continue}const row=node('div','row '+m.role),body=node('div','body'),bubble=node('div','bubble'),d=m.media||{};row.append(node('div','avatar',m.role==='me'?'我':meta.peer.slice(-2)));body.append(node('div','name',m.sender));const src=safePath(d.src);if(src&&['image','emoji','voice','video'].includes(m.type)){const e=document.createElement(m.type==='voice'?'audio':m.type==='video'?'video':'img');e.src=src;if(e.tagName==='IMG'){e.loading='lazy';e.alt=labels[m.type];}else{e.controls=true;e.preload='none'}bubble.append(e)}else if(m.type==='forward'&&m.forward){bubble.append(renderForward(m.forward));}else{bubble.append(node('div','',m.text||'['+(labels[m.type]||m.type)+']'))}if(m.type==='voice'){const tr=m.transcription;bubble.append(node('div','quote',tr&&tr.text?tr.text:(tr&&tr.status==='failed'?'本条转写失败':'尚未转写')));if(tr&&tr.text)bubble.append(node('div','name','机器转写 · 未校对'));}appendFileLinks(bubble,m);if(d.quote_text){const q=node('button','quote',(d.quote_from||'引用')+'：'+d.quote_text+' · 查看引用');q.style.cssText='display:block;text-align:left;white-space:pre-wrap';q.onclick=()=>showQuote(d);bubble.append(q);}row.dataset.messageKey=m.message_key;if(m.availability==='missing')bubble.append(node('div','missing',m.missing_reason||'媒体尚不可用'));body.append(bubble,node('div','time',m.time));row.append(body);$('list').append(row)}shown=Math.min(filtered.length,shown+150);$('status').textContent='显示 '+shown+' / '+filtered.length+' 条';$('more').hidden=shown>=filtered.length}function filter(){const q=$('search').value.toLowerCase(),t=selectedValues('type'),d=$('date').value,member=selectedValues('member');filtered=messages.filter(m=>(!$('availability').value||m.availability===$('availability').value)&&(!member.length||(m.role!=='system'&&member.includes(m.sender_id||m.sender)))&&(!t.length||t.some(type=>type==='transcribed'?!!m.transcription:m.type===type))&&(!d||m.time.slice(0,10)>=d)&&(!$('date-end').value||m.time.slice(0,10)<=$('date-end').value)&&(!q||(m.text+' '+(m.media.quote_text||'')+' '+(m.transcription?.text||'')).toLowerCase().includes(q)));shown=0;lastDay='';$('list').replaceChildren();render()}['search','type','date','date-end','member','availability'].forEach(id=>$(id).addEventListener('input',filter));$('more').onclick=render;filter();
+
+
+
+function appendFileLinks(container,m){
+ const src=safePath(m.media?.src);if(m.type!=='file'||!src)return;
+ const row=node('div','quote'),open=node('a','','打开 '+(m.media.filename||'附件')),download=node('a','','下载');
+ open.href=src;open.target='_blank';open.rel='noopener noreferrer';download.href=src;download.download=m.media.filename||'附件';download.style.marginLeft='14px';row.append(open,download);container.append(row);
+}
+function appendForwardFiles(container,record){
+ for(const m of record.messages){appendFileLinks(container,m);if(m.forward)appendForwardFiles(container,m.forward);}
+}
+
+
+function* allMessages(entries){for(const m of entries){yield m;if(m.forward)yield* allMessages(m.forward.messages);}}
+function renderForward(record,depth=0){
+ const details=node('details','forward-record');details.open=true;details.style.cssText='margin:0;color:inherit;font-size:inherit';
+ details.append(node('summary','',record.title+' · '+record.messages.length+' 条 · 展开聊天记录'));
+ for(const m of record.messages){
+  const section=node('div','forward-entry');section.style.cssText='border-top:1px solid #e7ece9;margin-top:10px;padding-top:10px';
+  section.append(node('div','name',[m.sender,m.time].filter(Boolean).join(' · ')));
+  if(m.forward){section.append(renderForward(m.forward,depth+1));}
+  else{
+   const src=safePath(m.media?.src);
+   if(src&&['image','emoji','voice','video'].includes(m.type)){
+    const e=node(m.type==='voice'?'audio':m.type==='video'?'video':'img');e.src=src;
+    if(e.tagName==='IMG'){e.alt='转发'+(labels[m.type]||'图片');e.loading='lazy';}else{e.controls=true;e.preload='none';}section.append(e);
+   }else{section.append(node('div','',m.text||'['+(labels[m.type]||m.type)+']'));}
+   if(m.type==='file'&&m.media?.bytes!==undefined)section.append(node('div','name','文件大小：'+m.media.bytes+' 字节'));
+   appendFileLinks(section,m);
+   if(m.media?.quote_text){const q=node('button','quote',(m.media.quote_from||'引用')+'：'+m.media.quote_text+' · 查看引用');q.style.cssText='display:block;text-align:left;white-space:pre-wrap';q.onclick=()=>showQuote(m.media);section.append(q);}
+   if(m.missing_reason)section.append(node('div','missing',m.missing_reason));
+  }
+  details.append(section);
+ }
+ if(record.missing_reason)details.append(node('div','missing',record.missing_reason));return details;
+}
+
+function forwardText(record,indent=''){
+ const lines=[];
+ for(const m of record.messages){lines.push(indent+[m.sender,m.time].filter(Boolean).join(' · ')+'：'+m.text);if(m.media?.bytes!==undefined)lines.push(indent+'文件大小：'+m.media.bytes+' 字节');if(m.media?.quote_text)lines.push(indent+'引用：'+(m.media.quote_from||'')+'：'+m.media.quote_text);if(m.forward)lines.push(forwardText(m.forward,indent+'  '));if(m.missing_reason)lines.push(indent+m.missing_reason);}
+ if(record.missing_reason)lines.push(indent+record.missing_reason);return lines.join('\n');
+}
+
+const originals=new Map(),owners=new Map();for(const parent of messages)for(const m of allMessages([parent])){owners.set(m,parent);if(m.server_id&&m.server_id!=='0'&&!originals.has(String(m.server_id)))originals.set(String(m.server_id),m);}
+const quoteDialog=node('dialog');quoteDialog.style.cssText='max-width:min(850px,90vw);max-height:85vh;border:1px solid #becac3;border-radius:14px;padding:22px;overflow:auto';
+quoteDialog.setAttribute('aria-label','引用的原消息');document.body.append(quoteDialog);
+function showQuote(d){
+ quoteDialog.replaceChildren();
+ const close=node('button','','关闭');close.onclick=()=>quoteDialog.close();quoteDialog.append(close);
+ const original=originals.get(String(d.quote_server_id||''));
+ if(!original){quoteDialog.append(node('p','','原消息未包含在本次档案中，以下为引用摘要。'),node('div','quote',(d.quote_from||'引用')+'：'+d.quote_text));quoteDialog.showModal();return;}
+ quoteDialog.append(node('p','',original.sender+' · '+original.time+'（北京时间）'),node('div','',original.text));
+ const src=safePath(original.media?.src);
+ if(src&&['image','emoji','voice','video'].includes(original.type)){
+  const el=node(original.type==='voice'?'audio':original.type==='video'?'video':'img');el.src=src;el.style.cssText='display:block;max-width:100%;max-height:60vh;margin:14px 0';
+  if(el.tagName==='IMG')el.alt=labels[original.type];else{el.controls=true;el.preload='metadata';}
+  el.onerror=()=>{el.replaceWith(node('p','missing','媒体文件无法加载'));};quoteDialog.append(el);
+ }else if(src&&original.type==='file'){const a=node('a','','打开附件');a.href=src;a.target='_blank';a.rel='noopener noreferrer';quoteDialog.append(a);}
+ else if(['image','emoji','voice','video','file'].includes(original.type))quoteDialog.append(node('p','missing',original.missing_reason||'原消息媒体未成功导出'));
+ if(original.transcription?.text)quoteDialog.append(node('p','',original.transcription.text));
+ const jump=node('button','','跳转到原消息');jump.onclick=()=>{
+  quoteDialog.close();for(const id of ['search','type','date','date-end','member','availability'])$(id).value='';filter();
+  const owner=owners.get(original)||original;const index=messages.indexOf(owner);while(shown<=index&&shown<filtered.length)render();
+  const row=Array.from(document.querySelectorAll('.row')).find(e=>e.dataset.messageKey===owner.message_key);
+  if(row){row.querySelectorAll('details').forEach(d=>d.open=true);row.scrollIntoView({block:'center',behavior:'smooth'});row.animate([{background:'#f4db91'},{background:'transparent'}],{duration:2000});}
+ };quoteDialog.append(jump);quoteDialog.showModal();
+}
+quoteDialog.addEventListener('close',()=>{quoteDialog.querySelectorAll('video,audio').forEach(e=>e.pause());});
+
+</script><script src="filtered-export.js"></script></html>

@@ -1,0 +1,41 @@
+# ── 真实聊天数据：永远不要提交 ──────────────────────────────
+data/
+config/wechat-auto-export.json
+release/
+build/
+dist/
+*.spec
+data/raw/*
+!data/raw/.gitkeep
+data/state/
+data/out/
+samples/safe/
+name-mapping.json
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# 脱敏映射表可能散落在别处，一并排除
+**/name-mapping.json
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# ── 环境与密钥 ────────────────────────────────────────────
+.env
+.env.*
+*.key
+
+# ── 编辑器 / 系统 ─────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local install/build only
+.build/
