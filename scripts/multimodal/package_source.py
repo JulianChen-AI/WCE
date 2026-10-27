@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[2]
 TOP = ('README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.gitignore',
        'requirements-desktop.txt', 'install.command', 'docs/INSTALL.md', 'docs/USAGE.md',
-       'docs/images/group-export.png', 'docs/images/chat-archive.png')
+       'docs/images/group-export.png', 'docs/images/chat-archive.png', 'docs/images/cover.png')
 RUNTIME = (
     'archive_export.py', 'attachments.py', 'build_desktop.py', 'emojis.py',
     'export_full.py', 'filtered-export.js', 'forwards.py', 'images.py',
