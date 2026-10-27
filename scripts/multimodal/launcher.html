@@ -19,10 +19,10 @@
 @media(max-width:740px){#connection-card.connected{display:block}.connected .connection-actions{margin-top:10px}}
 </style>
 <main><header><small>只在本机处理</small><h1>导出微信聊天</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step">1. 连接微信</li><li id="step-select">2. 选聊天对象</li><li id="step-export">3. 一键导出</li></ol></header>
-<section id="connection-card" aria-labelledby="connection-heading"><div class="connection-top"><h2 id="connection-heading">1. 连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="connect-wechat">连接微信</button><button id="import-connection">导入连接文件</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
-<div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
-<small class="privacy-note">只读取本机已有聊天，不修改微信。连接信息只保存在这台电脑，不要发给别人。</small>
-<details id="setup-panel"><summary>高级设置（通常不用改）</summary><p id="setup-note"></p><label>微信数据位置<input id="db-path" placeholder="仅在自动识别失败时填写"></label><label>自己的微信账号 ID<input id="own-id"></label><details><summary>图片与文件设置</summary><label>图片 AES 密钥<input id="image-key" type="password" autocomplete="off"></label><label>XOR 参数（0–255）<input id="xor-key" type="number" min="0" max="255" value="0"></label><label>保存位置（留空使用默认位置）<input id="output-path"></label></details><p><label><input id="asr" type="checkbox"> 把语音同时转成文字（更慢，首次需下载模型）</label></p><button id="save-setup">保存高级设置</button><p id="setup-status" role="status"></p></details></section>
+<section id="connection-card" aria-labelledby="connection-heading"><div class="connection-top"><h2 id="connection-heading">1. 连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="copy-agent-prompt">复制连接提示词</button><button id="connect-wechat">我已完成，重新检测</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
+<p id="agent-prompt-status" role="status"></p><div id="agent-prompt-fallback" hidden><label for="agent-prompt-text">复制以下提示词，发给能操作本机的 Agent</label><textarea id="agent-prompt-text" readonly rows="8" style="width:100%"></textarea></div><div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
+<small class="privacy-note">聊天记录仅在本机读取和保存，本工具不主动上传聊天内容。复制的提示词不包含聊天原文或密钥，请勿分享密钥和导出文件。</small>
+<details id="setup-panel"><summary>高级设置（通常不用改）</summary><p id="setup-note"></p><button id="import-connection">导入已有连接文件（高级）</button><label>微信数据位置<input id="db-path" placeholder="仅在自动识别失败时填写"></label><label>自己的微信账号 ID<input id="own-id"></label><details><summary>图片与文件设置</summary><label>图片 AES 密钥<input id="image-key" type="password" autocomplete="off"></label><label>XOR 参数（0–255）<input id="xor-key" type="number" min="0" max="255" value="0"></label><label>保存位置（留空使用默认位置）<input id="output-path"></label></details><p><label><input id="asr" type="checkbox"> 把语音同时转成文字（更慢，首次需下载模型）</label></p><button id="save-setup">保存高级设置</button><p id="setup-status" role="status"></p></details></section>
 <div id="workspace" class="layout" hidden><section><h2>2. 选聊天对象</h2><label for="kind">会话类型</label> <select id="kind" style="min-height:44px;padding:8px;font:inherit;margin-bottom:6px"><option value="group">群聊</option><option value="contact" selected>联系人</option><option value="official">公众号（订阅号）</option><option value="service">服务号</option><option value="other">其他机构号／类型未明</option></select><small id="list-note">默认显示最近会话，按最近聊天排序。头像只读取本机缓存。</small><label id="search-label" for="search">搜索群名称或 ID</label><input id="search" type="search" placeholder="输入群名或 ID"><div class="list-options"><label for="scope">显示范围 <select id="scope"><option value="recent">最近会话（推荐）</option><option value="all">全部列表</option></select></label><label><input id="show-id" type="checkbox">显示账号 ID</label></div><div class="bar"><small id="count" aria-live="polite">正在读取群聊…</small><button id="refresh">刷新列表</button></div><div id="groups"></div><button id="more" hidden>显示更多</button><div class="bar"><small>切换类型会清空选择</small><button id="clear-selection" disabled>清空选择</button></div><button id="start" disabled>导出所选群聊</button><p id="error" role="alert"></p></section>
 <section><h2>3. 导出并查看</h2><p id="status" role="status">等待选择聊天对象</p><details id="progress-details"><summary>查看详细进度</summary><pre id="logs">导出后，进度会显示在这里。</pre></details><div id="results"></div><small>导出完成后会自动打开，也可以点击上方按钮查看。</small></section></div><footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。保持启动窗口运行。</footer></main>
 <script>
@@ -72,7 +72,7 @@ function friendlyError(message){
 }
 function showConnection(ready,help){
   connectionReady=ready;$('connection-card').classList.toggle('connected',ready);$('connection-status').textContent=ready?'已连接':'还未连接';$('connection-status').classList.toggle('ready',ready);
-  $('connection-help').textContent=help;$('connect-wechat').textContent=ready?'重新检查连接':'重试连接';$('workspace').hidden=!ready;
+  $('connection-help').textContent=help;$('connect-wechat').textContent=ready?'重新检查连接':'我已完成，重新检测';$('copy-agent-prompt').hidden=ready;if(ready){$('agent-prompt-status').textContent='';$('agent-prompt-fallback').hidden=true;}$('workspace').hidden=!ready;
   $('import-connection').hidden=ready;$('switch-account').hidden=!ready;$('setup-panel').open=false;render();
 }
 async function setup(){
@@ -84,13 +84,13 @@ async function setup(){
     for(const [index,path] of paths.entries()){const o=document.createElement('option');o.value=path;const account=path.split(/[\\/]/).filter(Boolean).slice(-2,-1)[0]||'';o.textContent='微信账号 '+(index+1)+'（'+account.slice(-6)+'）';$('accounts').append(o);}
     $('account-choice').hidden=d.configured||paths.length<=1;
     if(d.configured){const ok=await load();showConnection(ok,ok?'已连接这台电脑的微信。下面选好聊天对象，就可以导出。':friendlyError($('setup-status').textContent));}
-    else showConnection(false,paths.length?'已找到本机微信。首次使用请点击“导入连接文件”；导入后会记住，下次无需重复设置。':'还没找到本机微信。请先打开并登录电脑版微信，再点“重试连接”。');
+    else showConnection(false,paths.length?'已找到本机微信，但读取权限和解密信息尚未全部验证。复制提示词，让 Agent 帮你完成连接。':'还没找到可读取的微信。请先登录电脑版微信，或复制提示词让 Agent 协助检查。');
   }catch(e){$('setup-status').textContent=e.message;showConnection(false,friendlyError(e.message));}
 }
 async function saveSetup(){
   const keyFile=$('key-file').files[0];
   if(!$('db-path').value){showConnection(false,'还没找到微信数据。请先打开并登录电脑版微信，再重试。');return;}
-  if(!keyFile&&!setupData?.configured){showConnection(false,'第一次使用需要导入一份本机连接文件。当前版本还不能自动生成这个文件。');return;}
+  if(!keyFile&&!setupData?.configured){showConnection(false,'尚未完成首次连接，请先复制提示词让 Agent 帮你检查权限和解密信息。');return;}
   connecting=true;updateControls();$('connection-status').textContent='正在连接';$('connection-help').textContent='正在检查这台电脑上的微信，请稍候…';
   try{
     const config={db_storage:$('db-path').value,own_id:$('own-id').value,output_dir:$('output-path').value,transcribe:$('asr').checked};
@@ -103,9 +103,48 @@ async function saveSetup(){
 }
 async function connectWechat(){
   if(connecting||running)return;
+  if(!setupData?.configured&&!$('key-file').files[0]){await setup();return;}
   if(!$('key-file').files[0]&&setupData?.configured&&$('db-path').value===setupData.config.db_storage){connecting=true;updateControls();try{await setup();}finally{connecting=false;updateControls();}return;}
   await saveSetup();
 }
+async function copyConnectionPrompt(){
+  const prompt=`请直接完成这台电脑上 WMR 的首次连接，不要只分析、安装或打开页面。仅处理本人授权的本机微信，不自动导出聊天。
+
+开始先询问用户并等待回答：“你希望以后怎么打开？A. 安装/复用 App，并在桌面放一个双击启动入口（推荐）；B. 不要桌面入口，保留现有启动方式。桌面入口只是快捷方式，不会再复制一份 App。”在回答前不要安装或创建入口；选择 B 时不擅自打包 App。
+用户选 A：复用确切的现有 App；没有 App 时按安装说明构建到 ~/Applications/WeChatChatkit.app。按本机文件管理约定选择桌面位置（本机为 ~/Desktop/Today），创建指向该 App 的 Finder 替身或符号链接，不复制、移动 App，不覆盖同名文件；有冲突先问用户。授权对象始终是实际 App，而不是桌面快捷方式。
+用户选 B：已有 App 就直接使用；源码方式先阅读仓库实际启动入口，给出已核实的完整命令、工作目录与所需终端，不编造启动命令。绑定当前源码进程而非假设存在 App，相关权限由实际执行宿主承接；后文 App 路径均按所选方式解释。
+无论选择哪项，完成后都要告诉用户：下次具体双击哪个图标/打开哪个绝对路径，或执行哪条完整命令；先登录微信，启动后等待浏览器自动打开，保留后台进程；端口可能变化，不让用户收藏临时 127.0.0.1 端口作为长期入口。若连接尚未完成，也交代如何再次启动继续配置。桌面入口尚未创建或启动未实测时，不宣称已创建/已验证。
+
+执行原则：复用当前项目、现有 App 和虚拟环境；不另建副本，不升级依赖，不重装已可用 App，不扫描整块磁盘。先列出“项目绝对路径、目标 App 绝对路径、该 App 的 PID、本机监听端口”，后续只操作这一实例。缺哪个只补哪个。每步只报告通过/失败及脱敏原因，不输出密钥、账号名称或聊天内容。
+
+0. 固定入口
+优先使用当前已下载仓库，阅读 docs/INSTALL.md 的“标准连接流程”。已有页面时，先确认提供该页面的进程和启动路径；浏览器地址不是 App 身份证明。不要把其他测试副本混进来。只有尚未安装且用户需要安装时，才依次执行 bash install.command --check、bash install.command；已安装则跳过构建。源码依赖优先用仓库 .venv/bin/python。目标为 Apple Silicon/macOS 13+；文档目标微信 4.1.13，其他版本不能直接宣称兼容，也不要擅自降级，用后续只读验证判断。
+
+1. 先分清权限问题，不要先猜密钥
+让用户确认本人微信已登录。用项目 scripts/multimodal/portable.py 的 discover_accounts() 检查目录；Mac 默认根目录为 ~/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/，目标是账号下含 contact/contact.db 的 db_storage。只检查相关目录。Operation not permitted 表示当前执行宿主的读取受限，不证明密钥错误；目录为空也可能是未登录、路径不同，不能直接断言缺权限。
+需要授权时，只引导用户打开“系统设置→隐私与安全性→完全磁盘访问权限”，点 +，用 Command+Shift+G 输入目标 App 所在目录，选中前面固定的那一个 App 并开启。不要索取密码，不读写 TCC 数据库。Agent 宿主（如 WorkBuddy）只有确实需要直接验证数据库且用户同意时才单独授权；宿主能读不代表 App 能读。
+授权后重启目标 App（先确认没有导出任务），重新绑定 PID/端口，GET /api/setup 看 accounts 是否发现目录。若宿主能读而 App 的 accounts 为空，优先核对授权的是否是另一个同名旧 App；让用户核对后重新添加确切路径，不重复重装、不自动删除其他授权或结束其他实例。
+
+2. 有限定位本人已有密钥，不重新研究采集工具
+按顺序检查：~/Library/Application Support/WeChatChatkit/settings.json 与 keys.json；用户明确提供的本人备份；当前项目 portable.load_settings() 已声明的旧版配置位置。旧项目回退为旧项目根目录/config/wechat-auto-export.json 和 data/wechat-live/data/state/candidates.json，只有明确定位到本人的旧项目时才使用，不能假定新人一定有。CHATKIT_USER_DIR 会禁用默认旧版回退；不要为了尝试而修改环境或覆盖配置。
+使用 portable.parse_keys() 在内存解析候选数组/映射，只输出数量与格式检查结果。不要 cat 密钥文件，不把密钥放入命令行参数、提示词、日志、临时明文文件或 Git。没有任何有效候选时立即停止并报告“缺少数据库密钥；当前公开项目没有通用自动获取器”，请求用户提供本人备份或明确批准一个已确认适配的方案；不要无限搜索或安装 Frida、修改/重签名微信、关闭 SIP/Gatekeeper。提示词本身不能补齐这个能力。
+
+3. 用全部候选逐库验证，不把一把密钥套到所有库
+复用项目 run.connect(path,key)，对联系人库 contact/contact.db、会话库 session/session.db，以及实际存在的 message/message_*.db 分别尝试候选（每库每候选最多一次）；可复用 launcher.connect_aux(path,keys)。用只读 schema/计数查询验证，只报告各类库成功数/失败数，不打印表中记录。联系人成功但会话失败时继续尝试其他候选，不立即认定整组密钥失效。不要丢掉其他库需要的候选，保存完整有效候选集合。无关的旧迁移库失败不等于主流程失败；必需库失败必须明确说明，不能笼统宣称全部可用。升级时间或候选编号不能替代实测。
+
+4. 保存到同一个 App，再以 App 自身验收
+先 GET 固定实例的 /api/setup；保存使用同一实例 POST /api/setup，JSON 为 {"config":{"db_storage":"实际发现的目录","transcribe":false},"keys":{"candidates":[完整候选]}}。请求必须带 Origin: http://127.0.0.1:实际端口；用 Python 在内存读取密钥并组装请求，不在 shell 参数或日志展开请求体。保留已有用户选项；不要覆盖同目录已有图片参数，不猜 own_id、图片 AES 或 XOR。正常连接不要求用户填满高级表单；本轮不启用语音模型下载。
+保存返回 ok:true 仍不足以结束：继续请求同一实例 GET /api/accounts、GET /api/groups（只输出 HTTP 状态及列表数量，不展示内容），确认无解密错误。零条可以是合法结果，不能为了数量好看造数据；数据库只读验证也必须通过。若 shell 验证成功而 App 报密钥错误，先回查第1步 App 本身的权限及账号发现，不重新采集密钥。
+
+5. 停止条件与交付
+同一错误最多原样重试一次，失败后改变诊断依据；不能反复重装、递归阅读源码或无边界找工具。需要系统授权时一次给出确切 App 路径和操作步骤，等待用户完成，授权后继续未完成步骤，不从安装重来。
+最后只报告：用户选择的启动方式、桌面入口实际位置（如有）、下次启动步骤、目标 App 或源码入口路径与当前页面地址；权限/联系人库/会话库/消息库验证结果；连接成功或唯一阻碍及下一步。成功后打开该实例页面，让用户点“我已完成，重新检测”进入联系人/群聊选择。不要自动导出，不记录密钥到工作日志，不提交用户配置。聊天与密钥仅在本机处理；本工具不主动上传，但不能承诺任何情况下绝不泄漏。
+
+已知本机案例（不是所有用户的保证）：曾用已有候选集合逐库成功验证；一次失败来自完全磁盘访问权限授给同名旧测试 App，重新授权确切正式 App 后恢复。该案例没有验证全新机器无密钥时的自动采集能力。`;
+  try{await navigator.clipboard.writeText(prompt);$('agent-prompt-status').textContent='已复制。发给能够操作这台电脑的 Agent，完成后点击“我已完成，重新检测”。';}
+  catch(e){$('agent-prompt-text').value=prompt;$('agent-prompt-fallback').hidden=false;$('agent-prompt-text').focus();$('agent-prompt-text').select();$('agent-prompt-status').textContent='浏览器未允许自动复制，请复制下方提示词。';}
+}
+$('copy-agent-prompt').onclick=copyConnectionPrompt;
 $('connect-wechat').onclick=connectWechat;$('save-setup').onclick=saveSetup;$('import-connection').onclick=()=>$('key-file').click();$('key-file').onchange=connectWechat;
 $('switch-account').onclick=()=>{$('account-choice').hidden=!$('account-choice').hidden;$('import-connection').hidden=false;};
 $('accounts').onchange=()=>{$('db-path').value=$('accounts').value;showConnection(false,'已选好微信账号，点击“重试连接”。如果无法连接，请导入这个账号的连接文件。');};
