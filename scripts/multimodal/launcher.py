@@ -86,6 +86,25 @@ def avatar(username):
         conn.close()
 
 
+
+def account_kind(username, biz_type=None, verify_flag=0, known_business=False):
+    """Local biz_info types, not the unrelated public-platform API enums."""
+    if username.endswith('@chatroom'):
+        return 'group'
+    if biz_type == 0:
+        return 'official'
+    if biz_type == 1:
+        return 'service'
+    # Missing/unsupported business metadata must not masquerade as a person.
+    if known_business or username.startswith('gh_') or (verify_flag or 0) & 8:
+        return 'other'
+    return 'contact'
+
+
+ACCOUNT_LABELS = {'group': '群聊', 'contact': '联系人', 'official': '公众号（订阅号）',
+                  'service': '服务号', 'other': '其他机构号／类型未明'}
+
+
 def conversations():
     cfg = load_settings()
     db = Path(cfg['db_storage']) / 'contact/contact.db'
@@ -100,20 +119,24 @@ def conversations():
         try:
             conn = run.connect(db, key)
             try:
-                if not {'username', 'nick_name', 'remark'} <= {r[1] for r in conn.execute('PRAGMA table_info(contact)')}:
+                columns = {r[1] for r in conn.execute('PRAGMA table_info(contact)')}
+                if not {'username', 'nick_name', 'remark'} <= columns:
                     raise RuntimeError('联系人表结构尚未适配，请反馈微信完整版本号；不会猜测读取')
-                rows = conn.execute("SELECT username,nick_name,remark FROM contact ORDER BY nick_name,username").fetchall()
+                flag = 'verify_flag' if 'verify_flag' in columns else '0'
+                rows = conn.execute('SELECT username,nick_name,remark,' + flag + ' FROM contact ORDER BY nick_name,username').fetchall()
+                biz_columns = {r[1] for r in conn.execute('PRAGMA table_info(biz_info)')}
+                business = dict(conn.execute('SELECT username,type FROM biz_info')) if {'username', 'type'} <= biz_columns else {}
                 own = account_id(Path(cfg['db_storage']).parent, cfg)
                 recent = recent_activity(Path(cfg['db_storage']), keys)
                 items = []
-                for id, nick, remark in rows:
+                for id, nick, remark, verify_flag in rows:
                     if not id or id == own:
                         continue
-                    kind = 'group' if id.endswith('@chatroom') else 'contact'
+                    kind = account_kind(id, business.get(id), verify_flag, id in business)
                     name = (remark or '').strip() or (nick or '').strip()
                     named = bool(name and name != id)
-                    items.append(dict(id=id, name=name if named else ('未命名群聊' if kind == 'group' else '未命名联系人'),
-                                      nickname=nick or '', kind=kind, named=named,
+                    items.append(dict(id=id, name=name if named else ('未命名'+ACCOUNT_LABELS[kind]),
+                                      nickname=nick or '', kind=kind, account_label=ACCOUNT_LABELS[kind], named=named,
                                       has_history=id in recent if recent is not None else None,
                                       last_active=recent.get(id, 0) if recent is not None else 0))
                 return sorted(items, key=lambda item: (-item['last_active'], not item['named'], item['name'].casefold(), item['id']))
@@ -133,6 +156,10 @@ def groups():
 
 def contacts():
     return [item for item in conversations() if item['kind'] == 'contact']
+
+
+def accounts():
+    return [item for item in conversations() if item['kind'] != 'group']
 
 
 def export(ids):
@@ -216,6 +243,11 @@ class Handler(SimpleHTTPRequestHandler):
         elif path == '/api/groups':
             try:
                 self.reply(dict(groups=groups()))
+            except Exception as exc:
+                self.reply(dict(error=str(exc)), 500)
+        elif path == '/api/accounts':
+            try:
+                self.reply(dict(accounts=accounts()))
             except Exception as exc:
                 self.reply(dict(error=str(exc)), 500)
         elif path == '/api/contacts':
