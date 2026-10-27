@@ -1,4 +1,4 @@
-"""Lightweight local group picker; reuses the existing exporter."""
+"""Lightweight local conversation picker; reuses the existing exporter."""
 import json
 import os
 import subprocess
@@ -17,13 +17,13 @@ if '--export' in sys.argv and os.environ.get('CHATKIT_EXPORT_LOG'):
 
 import run
 from portable import (ROOT, user_dir, load_settings, load_keys, discover_accounts,
-                      parse_keys, save_settings, TARGET_VERSION)
+                      parse_keys, save_settings, account_id, TARGET_VERSION)
 
 state = dict(status='idle', logs=[], results=[])
 lock = threading.Lock()
 
 
-def groups():
+def conversations():
     cfg = load_settings()
     db = Path(cfg['db_storage']) / 'contact/contact.db'
     try:
@@ -39,8 +39,11 @@ def groups():
             try:
                 if not {'username', 'nick_name', 'remark'} <= {r[1] for r in conn.execute('PRAGMA table_info(contact)')}:
                     raise RuntimeError('联系人表结构尚未适配，请反馈微信完整版本号；不会猜测读取')
-                rows = conn.execute("SELECT username,nick_name,remark FROM contact WHERE username LIKE '%@chatroom' ORDER BY nick_name").fetchall()
-                return [dict(id=id, name=remark or nick or id) for id, nick, remark in rows]
+                rows = conn.execute("SELECT username,nick_name,remark FROM contact ORDER BY nick_name,username").fetchall()
+                own = account_id(Path(cfg['db_storage']).parent, cfg)
+                return [dict(id=id, name=remark or nick or id, nickname=nick or '',
+                             kind='group' if id.endswith('@chatroom') else 'contact')
+                        for id, nick, remark in rows if id and id != own]
             finally:
                 conn.close()
         except run.sqlcipher3.DatabaseError as exc:
@@ -49,6 +52,14 @@ def groups():
     if 'unable to open' in last_error.lower() or 'authorization' in last_error.lower():
         raise RuntimeError('无法打开微信数据库。桌面入口由终端启动，请检查终端的完全磁盘访问权限。错误：' + last_error)
     raise RuntimeError('微信数据库读取失败：' + last_error + '。可能是密钥失效或数据库暂不可用。')
+
+
+def groups():
+    return [item for item in conversations() if item['kind'] == 'group']
+
+
+def contacts():
+    return [item for item in conversations() if item['kind'] == 'contact']
 
 
 def export(ids):
@@ -116,6 +127,11 @@ class Handler(SimpleHTTPRequestHandler):
         if path == '/api/groups':
             try:
                 self.reply(dict(groups=groups()))
+            except Exception as exc:
+                self.reply(dict(error=str(exc)), 500)
+        elif path == '/api/contacts':
+            try:
+                self.reply(dict(contacts=contacts()))
             except Exception as exc:
                 self.reply(dict(error=str(exc)), 500)
         elif path == '/api/setup':
@@ -216,10 +232,10 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             ids = body.get('ids')
             if not isinstance(ids, list) or not ids or any(not isinstance(id, str) for id in ids):
-                raise ValueError('请选择群聊')
-            available = {g['id'] for g in groups()}
+                raise ValueError('请选择联系人或群聊')
+            available = {g['id'] for g in conversations()}
             if any(id not in available for id in ids):
-                raise ValueError('群聊列表已变化，请刷新列表')
+                raise ValueError('联系人或群聊列表已变化，请刷新列表')
             with lock:
                 if state['status'] == 'running':
                     self.reply(dict(error='已有导出正在进行'), 409)
