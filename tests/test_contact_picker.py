@@ -50,7 +50,7 @@ def exercise(home):
         accounts_code,_,body=get('/api/accounts');accounts=json.loads(body).get('accounts',[]) if accounts_code==200 else []
         code,mime,avatar=get('/api/avatar/wxid_recent')
         _,_,body=get('/');html=body.decode()
-        return dict(account_types={i['id']:i['kind'] for i in accounts},contact_count=len(contacts),order=[i['id'] for i in contacts],has_history={i['id']:i.get('has_history') for i in contacts},group_name=groups[0]['name'],
+        return dict(simple_connection_ui='id="connection-card"' in html,advanced_not_forced_open="$('setup-panel').open=!d.configured" not in html,guided_connect="async function connectWechat" in html,private_progress_ui='id="progress-details"' in html,account_types={i['id']:i['kind'] for i in accounts},contact_count=len(contacts),order=[i['id'] for i in contacts],has_history={i['id']:i.get('has_history') for i in contacts},group_name=groups[0]['name'],
                     avatar_http=code,avatar_mime=mime,avatar_bytes_match=avatar==png,missing_avatar_http=get('/api/avatar/unknown')[0],unsafe_avatar_http=get('/api/avatar/wxid_unsafe')[0],foreign_host=get('/api/avatar/wxid_recent','attacker.invalid')[0],
                     avatar_ui="className='avatar'" in html,duplicate_id_ui="name.textContent=g.name+' · '+g.id" in html,idle_rebuild="append(a);}render();" in html)
     finally:server.shutdown();server.server_close()
@@ -59,6 +59,7 @@ if __name__=='__main__':
     with tempfile.TemporaryDirectory(prefix='synthetic-',dir=Path(__file__).parent) as temp:
         observed=exercise(Path(temp))
         print(json.dumps(observed,ensure_ascii=False,sort_keys=True))
+        assert observed['simple_connection_ui'] and observed['advanced_not_forced_open'] and observed['guided_connect'] and observed['private_progress_ui'], 'Technical setup is still the primary onboarding'
         assert observed['contact_count']==3, 'Public/service accounts leaked into ordinary contacts'
         assert observed['account_types']=={'wxid_old':'contact','wxid_recent':'contact','wxid_unsafe':'contact','gh_subscription':'official','legacy_service':'service','gh_unknown':'other','gh_enterprise':'other','verified_business':'other'}
         assert observed['avatar_http']==200 and observed['avatar_bytes_match']
