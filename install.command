@@ -34,7 +34,7 @@ fi
 for rel in requirements-desktop.txt scripts/multimodal/launcher.py scripts/multimodal/build_desktop.py; do
   [ -f "$ROOT/$rel" ] || { echo "源码不完整：$rel" >&2; exit 5; }
 done
-app="$app_dir/WeChatChatkit.app"
+app="$app_dir/WCE.app"
 if [ -e "$app" ] || [ -L "$app" ]; then
   echo "已有应用，未覆盖：$app" >&2; exit 6
 fi
@@ -48,12 +48,12 @@ if [ ! -x .venv/bin/python ]; then "$py" -m venv .venv; fi
 mkdir -p .build
 build="$(mktemp -d "$ROOT/.build/install.XXXXXX")/desktop"
 .venv/bin/python scripts/multimodal/build_desktop.py --output "$build"
-[ -d "$build/WeChatChatkit.app" ] || { echo '未生成 App，未安装' >&2; exit 8; }
+[ -d "$build/WCE.app" ] || { echo '未生成 App，未安装' >&2; exit 8; }
 mkdir -p "$app_dir"
 stage="$(mktemp -d "$app_dir/.wechat-chatkit.XXXXXX")"
-/usr/bin/ditto "$build/WeChatChatkit.app" "$stage/WeChatChatkit.app"
-/bin/mv -n "$stage/WeChatChatkit.app" "$app_dir/"
-if [ -d "$stage/WeChatChatkit.app" ]; then echo '目标已存在，停止安装且未覆盖' >&2; exit 6; fi
+/usr/bin/ditto "$build/WCE.app" "$stage/WCE.app"
+/bin/mv -n "$stage/WCE.app" "$app_dir/"
+if [ -d "$stage/WCE.app" ]; then echo '目标已存在，停止安装且未覆盖' >&2; exit 6; fi
 rmdir "$stage"
 echo "安装完成：$app"
 if [ "$no_open" -eq 0 ]; then /usr/bin/open "$app"; fi

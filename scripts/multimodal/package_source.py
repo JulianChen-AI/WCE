@@ -38,7 +38,7 @@ if __name__ == '__main__':
     files = source_files()
     folder = ROOT / 'release'
     folder.mkdir(exist_ok=True)
-    output = folder / ('wechat-chatkit-mac-source-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.zip')
+    output = folder / ('wce-mac-source-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.zip')
     with ZipFile(output, 'x', compression=ZIP_DEFLATED) as archive:
         for path in files:
             archive.write(path, path.relative_to(ROOT).as_posix())

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
-<title id="title">WMR 微信聊天档案</title><desc id="desc">把微信聊天留成自己的档案。右侧为虚构联系人选择界面示意。</desc>
+<title id="title">WCE 微信全导</title><desc id="desc">把微信聊天留成自己的档案。右侧为虚构联系人选择界面示意。</desc>
 <rect width="1200" height="650" fill="#edf4f0"/><path d="M770 0h430v650H990Z" fill="#dcebe3"/>
 <g font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
-<rect x="64" y="65" width="44" height="44" rx="13" fill="#32664e"/><text x="86" y="95" text-anchor="middle" font-size="25" font-weight="700" fill="white">W</text><text x="122" y="94" font-size="18" fill="#426050">WMR · 微信聊天档案</text>
+<rect x="64" y="65" width="44" height="44" rx="13" fill="#32664e"/><text x="86" y="95" text-anchor="middle" font-size="25" font-weight="700" fill="white">W</text><text x="122" y="94" font-size="18" fill="#426050">WCE · 微信全导 / WeChat Export</text>
 <text x="64" y="235" font-size="58" font-weight="750" fill="#213e32">把微信聊天，</text><text x="64" y="315" font-size="58" font-weight="750" fill="#213e32">留成自己的档案。</text>
 <text x="67" y="375" font-size="21" fill="#60786b">选择联系人或群聊，整理消息与附件。</text>
 <g fill="#dbe9e0"><rect x="64" y="423" width="120" height="40" rx="20"/><rect x="196" y="423" width="120" height="40" rx="20"/><rect x="328" y="423" width="120" height="40" rx="20"/></g>

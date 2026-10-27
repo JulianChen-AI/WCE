@@ -1,8 +1,8 @@
-# WMR · 微信聊天档案
+# WCE · 微信全导｜WeChat Export
 
-[项目展示](https://julianchen-ai.github.io/wmr/) · [下载源码](https://github.com/JulianChen-AI/wmr/archive/refs/heads/main.zip) · [安装说明](docs/INSTALL.md)
+[项目展示](https://julianchen-ai.github.io/WCE/) · [下载源码](https://github.com/JulianChen-AI/WCE/archive/refs/heads/main.zip) · [安装说明](docs/INSTALL.md)
 
-![WMR：把微信聊天，留成自己的档案。界面为虚构数据示意。](docs/images/showcase.svg)
+![WCE：把微信聊天，留成自己的档案。界面为虚构数据示意。](docs/images/showcase.svg)
 
 **把微信聊天，留成自己的档案。**
 
@@ -21,7 +21,7 @@
 把仓库链接和下面这段话发给能操作本机的编程 Agent：
 
 ```text
-请安装并连接 WMR：https://github.com/JulianChen-AI/wmr
+请安装并连接 WCE：https://github.com/JulianChen-AI/WCE
 优先复用本机已有项目。先阅读 docs/INSTALL.md 与 docs/USAGE.md，
 先问我是否需要 App 和桌面双击入口，再按标准连接流程检查环境、权限和本人已有密钥。
 不要只安装后就结束；实际验证联系人与会话可读取才算连接成功。
@@ -29,7 +29,7 @@
 最后告诉我下次怎么启动。
 ```
 
-也可以先[下载源码](https://github.com/JulianChen-AI/wmr/archive/refs/heads/main.zip)，按[安装说明](docs/INSTALL.md)操作。源码压缩包不是已经签名、公证的 App 安装包。
+也可以先[下载源码](https://github.com/JulianChen-AI/WCE/archive/refs/heads/main.zip)，按[安装说明](docs/INSTALL.md)操作。源码压缩包不是已经签名、公证的 App 安装包。
 
 ## 怎么使用
 

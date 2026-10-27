@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>微信聊天工作台</title>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WCE · 微信全导｜WeChat Export</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6f5;color:#263b32;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}main{max-width:1050px;margin:28px auto;padding:0 24px}small{color:#697b70}h1{font-size:28px;margin:10px 0}header p{color:#697b70;line-height:1.8}.layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px}section{background:white;border:1px solid #dce5df;border-radius:16px;padding:20px}h2{font-size:18px;margin:0 0 18px}input[type=search]{width:100%;border:1px solid #b8cabe;border-radius:8px;padding:12px;font:inherit}button,.result{border:1px solid #c1d2c7;border-radius:8px;background:#fff;color:#284c37;padding:10px 15px;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:wait}#start{width:100%;background:#32674a;color:white;margin-top:16px}#groups{max-height:390px;overflow:auto;margin-top:14px}.group{display:flex;align-items:flex-start;gap:10px;padding:13px 4px;border-bottom:1px solid #edf1ee;cursor:pointer;overflow-wrap:anywhere}.group input{width:18px;height:18px;flex-shrink:0}.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#logs{background:#f4f7f5;border-radius:8px;padding:14px;height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,monospace}#status{font-weight:600}.result{display:block;margin-top:10px;text-decoration:none}#error{color:#a2392b;white-space:pre-wrap}footer{color:#718176;font-size:12px;margin:20px 0;line-height:1.8}@media(max-width:740px){main{margin:24px auto}.layout{grid-template-columns:1fr}}
 
@@ -18,7 +18,7 @@
 #connection-card.connected{display:grid;grid-template-columns:1fr auto;gap:0 16px;padding:16px 20px}.connected .connection-top{grid-column:1/-1}.connected #connection-heading{font-size:16px;margin:0}.connected #connection-help{margin:8px 0;align-self:center;font-size:14px}.connected .connection-actions{grid-column:2;grid-row:2;align-self:center}.connected #setup-panel,.connected #account-choice{grid-column:1/-1}.connected #setup-panel{margin-top:8px;padding-top:10px}.connected .privacy-note{display:none}
 @media(max-width:740px){#connection-card.connected{display:block}.connected .connection-actions{margin-top:10px}}
 </style>
-<main><header><small>只在本机处理</small><h1>导出微信聊天</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step">1. 连接微信</li><li id="step-select">2. 选聊天对象</li><li id="step-export">3. 一键导出</li></ol></header>
+<main><header><small>只在本机处理</small><h1>WCE · 微信全导</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step">1. 连接微信</li><li id="step-select">2. 选聊天对象</li><li id="step-export">3. 一键导出</li></ol></header>
 <section id="connection-card" aria-labelledby="connection-heading"><div class="connection-top"><h2 id="connection-heading">1. 连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="copy-agent-prompt">复制连接提示词</button><button id="connect-wechat">我已完成，重新检测</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
 <p id="agent-prompt-status" role="status"></p><div id="agent-prompt-fallback" hidden><label for="agent-prompt-text">复制以下提示词，发给能操作本机的 Agent</label><textarea id="agent-prompt-text" readonly rows="8" style="width:100%"></textarea></div><div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
 <small class="privacy-note">聊天记录仅在本机读取和保存，本工具不主动上传聊天内容。复制的提示词不包含聊天原文或密钥，请勿分享密钥和导出文件。</small>
@@ -108,10 +108,10 @@ async function connectWechat(){
   await saveSetup();
 }
 async function copyConnectionPrompt(){
-  const prompt=`请直接完成这台电脑上 WMR 的首次连接，不要只分析、安装或打开页面。仅处理本人授权的本机微信，不自动导出聊天。
+  const prompt=`请直接完成这台电脑上 WCE 的首次连接，不要只分析、安装或打开页面。仅处理本人授权的本机微信，不自动导出聊天。
 
 开始先询问用户并等待回答：“你希望以后怎么打开？A. 安装/复用 App，并在桌面放一个双击启动入口（推荐）；B. 不要桌面入口，保留现有启动方式。桌面入口只是快捷方式，不会再复制一份 App。”在回答前不要安装或创建入口；选择 B 时不擅自打包 App。
-用户选 A：复用确切的现有 App；没有 App 时按安装说明构建到 ~/Applications/WeChatChatkit.app。按本机文件管理约定选择桌面位置（本机为 ~/Desktop/Today），创建指向该 App 的 Finder 替身或符号链接，不复制、移动 App，不覆盖同名文件；有冲突先问用户。授权对象始终是实际 App，而不是桌面快捷方式。
+用户选 A：复用确切的现有 App（旧版 WeChatChatkit.app 也可继续使用，不因更名重装）；没有 App 时按安装说明构建到 ~/Applications/WCE.app。按本机文件管理约定选择桌面位置（本机为 ~/Desktop/Today），创建指向该 App 的 Finder 替身或符号链接，不复制、移动 App，不覆盖同名文件；有冲突先问用户。授权对象始终是实际 App，而不是桌面快捷方式。
 用户选 B：已有 App 就直接使用；源码方式先阅读仓库实际启动入口，给出已核实的完整命令、工作目录与所需终端，不编造启动命令。绑定当前源码进程而非假设存在 App，相关权限由实际执行宿主承接；后文 App 路径均按所选方式解释。
 无论选择哪项，完成后都要告诉用户：下次具体双击哪个图标/打开哪个绝对路径，或执行哪条完整命令；先登录微信，启动后等待浏览器自动打开，保留后台进程；端口可能变化，不让用户收藏临时 127.0.0.1 端口作为长期入口。若连接尚未完成，也交代如何再次启动继续配置。桌面入口尚未创建或启动未实测时，不宣称已创建/已验证。
 

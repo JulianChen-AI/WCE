@@ -19,7 +19,7 @@ def main():
         raise SystemExit('构建目录已存在，请指定新目录')
     output.mkdir(parents=True)
     cmd = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir',
-           '--name', 'WeChatChatkit', '--distpath', str(output),
+           '--name', 'WCE', '--distpath', str(output),
            '--workpath', str(output / 'work'), '--specpath', str(output / 'spec'),
            '--paths', str(ROOT / 'scripts/multimodal'),
            '--paths', str(ROOT / 'vendor/wechat-exporter-mac'),
@@ -36,12 +36,12 @@ def main():
         cmd += ['--add-data', str(ROOT / source) + ':' + str(Path(source).parent)]
     cmd.append(str(ROOT / 'scripts/multimodal/launcher.py'))
     subprocess.run(cmd, cwd=ROOT, check=True)
-    stem = 'WeChatChatkit-' + sys.platform + '-' + platform.machine()
+    stem = 'WCE-' + sys.platform + '-' + platform.machine()
     if sys.platform == 'darwin':
         subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', '--keepParent',
-                        str(output / 'WeChatChatkit.app'), str(output / (stem + '.zip'))], check=True)
+                        str(output / 'WCE.app'), str(output / (stem + '.zip'))], check=True)
     else:
-        shutil.make_archive(str(output / stem), 'zip', root_dir=output, base_dir='WeChatChatkit')
+        shutil.make_archive(str(output / stem), 'zip', root_dir=output, base_dir='WCE')
     print('构建完成：' + str(output))
 
 

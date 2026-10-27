@@ -8,7 +8,7 @@
 1. 检查源码来源、`LICENSE` 和第三方声明。只在有权使用的设备上安装。
 2. 确认 macOS、原生 arm64 和 Python 3.11。缺 Python 时，优先使用用户已安装的包管理器；如已有 uv，可运行 `uv python install 3.11`，再把 `uv python find 3.11` 返回的解释器路径设为 `CHATKIT_PYTHON`。不要擅自安装包管理器或索取账号密码。
 3. 在仓库根目录先运行 `bash install.command --check`。检查不安装依赖、不创建环境、不改用户配置。
-4. 运行 `bash install.command`。它创建仓库内独立虚拟环境，联网下载 Python 依赖，在本机构建 App，安装到 `~/Applications/WeChatChatkit.app` 并打开。全程不需要 sudo。
+4. 运行 `bash install.command`。它创建仓库内独立虚拟环境，联网下载 Python 依赖，在本机构建 App，安装到 `~/Applications/WCE.app` 并打开。全程不需要 sudo。
 5. 若发现已有同名 App，停止并告知用户；脚本不会覆盖。需要并存时，用 `--app-dir` 指定新的绝对目录。
 6. 安装后继续完成下方“首次连接”，不能把 App 已打开当作任务完成。无法继续时，界面的“复制连接提示词”用于让另一个能操作本机的 Agent 接着协助。
 
@@ -43,3 +43,9 @@
 本机 WorkBuddy 案例的主要绕路：已有环境仍重建 App；宿主可读被误当成 App 可读；同名旧副本获授权；用联系人库的一把密钥测试其他库。最终成功依赖已有本人候选密钥和正确 App 授权，不是全新无密钥安装的成功案例。具体候选编号、账号及开发者路径不得写死到公共流程。
 
 聊天记录与密钥只在本机处理、保存，不主动上传聊天内容；不关闭 SIP、Gatekeeper，不修改或重签名微信。导出档案包含隐私，不能承诺任何情况下“绝不泄漏”。
+
+## WCE 更名兼容
+
+英文全称为 WeChat Export，中文为微信全导。新构建安装为 `WCE.app`；旧版 `WeChatChatkit.app` 可继续使用，不自动复制、改名或重装。已有旧 App 时先复用，只有用户明确选择升级时才安装新构建，并核对新 App 的系统读取授权。
+
+为复用已有连接，用户配置目录仍为 `~/Library/Application Support/WeChatChatkit`，应用 bundle identifier 与 `CHATKIT_*` 环境变量保持兼容；这不是展示名称，不迁移、不清空。
