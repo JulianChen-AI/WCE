@@ -39,3 +39,4 @@ venv/
 
 # Local install/build only
 .build/
+tests/synthetic-*/

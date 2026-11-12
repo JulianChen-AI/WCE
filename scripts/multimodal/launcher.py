@@ -101,6 +101,55 @@ def account_kind(username, biz_type=None, verify_flag=0, known_business=False):
     return 'contact'
 
 
+def runtime_info():
+    """What a helper agent needs to find *this* running instance (no secrets)."""
+    exe = Path(sys.executable).resolve()
+    if getattr(sys, 'frozen', False):
+        app = exe.parents[2] if sys.platform == 'darwin' and exe.parent.name == 'MacOS' else exe
+        mode = 'app'
+    else:
+        app = Path(__file__).resolve()
+        mode = 'source'
+    return dict(mode=mode, app=str(app), pid=os.getpid(), python=str(exe),
+                runtime_file=str(user_dir() / 'runtime.json'))
+
+
+def relaunch_command():
+    info = runtime_info()
+    if info['mode'] == 'source':
+        return [sys.executable, str(Path(__file__).resolve())]
+    if sys.platform == 'darwin':
+        return ['/usr/bin/open', '-n', info['app']]
+    return [info['app']]
+
+
+def write_runtime_file():
+    """Lets a helper agent find the current address after a restart (no secrets)."""
+    try:
+        path = user_dir() / 'runtime.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(dict(base=BASE, pid=os.getpid(), app=runtime_info()['app'],
+                                        started=int(time.time())), ensure_ascii=False), encoding='utf-8')
+    except OSError:
+        pass
+
+
+def shutdown(restart=False):
+    """Replaced in tests. Gives the HTTP reply time to flush, then exits."""
+    def later():
+        time.sleep(0.6)
+        if restart:
+            kwargs = dict(close_fds=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if sys.platform == 'win32':
+                kwargs['creationflags'] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                kwargs['start_new_session'] = True
+            subprocess.Popen(relaunch_command(), **kwargs)
+            time.sleep(0.4)
+        os._exit(0)
+    threading.Thread(target=later, daemon=True).start()
+
+
 ACCOUNT_LABELS = {'group': '群聊', 'contact': '联系人', 'official': '公众号（订阅号）',
                   'service': '服务号', 'other': '其他机构号／类型未明'}
 
@@ -270,7 +319,8 @@ class Handler(SimpleHTTPRequestHandler):
             except RuntimeError:
                 config, configured = {}, False
             self.reply(dict(configured=configured, config=config, accounts=discover_accounts(),
-                            platform='windows' if sys.platform == 'win32' else 'macos', target_version=TARGET_VERSION))
+                            platform='windows' if sys.platform == 'win32' else 'macos', target_version=TARGET_VERSION,
+                            runtime=runtime_info()))
         elif path == '/api/status':
             with lock:
                 self.reply(state)
@@ -299,8 +349,17 @@ class Handler(SimpleHTTPRequestHandler):
                 shutil.copyfileobj(source, self.wfile)
 
     def do_POST(self):
-        if not self.valid_host() or self.headers.get('Origin') != BASE or self.path not in ('/api/export', '/api/setup'):
+        if not self.valid_host() or self.headers.get('Origin') != BASE or self.path not in ('/api/export', '/api/setup', '/api/quit', '/api/restart'):
             self.send_error(403)
+            return
+        if self.path in ('/api/quit', '/api/restart'):
+            with lock:
+                if state['status'] == 'running':
+                    self.reply(dict(error='正在导出，请等导出完成后再退出或重启'), 409)
+                    return
+                state['status'] = 'stopping'
+            self.reply(dict(ok=True, restarting=self.path == '/api/restart'))
+            shutdown(restart=self.path == '/api/restart')
             return
         try:
             length = int(self.headers.get('Content-Length', 0))
@@ -383,8 +442,9 @@ if __name__ == '__main__':
         raise SystemExit(0)
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
     BASE = 'http://127.0.0.1:' + str(server.server_port)
+    write_runtime_file()
     print('本地工作台：' + BASE, flush=True)
-    print('保持此窗口运行；按 Control+C 停止。', flush=True)
+    print('保持此窗口运行；按 Control+C 或网页上的「退出 WCE」停止。', flush=True)
     webbrowser.open(BASE)
     try:
         server.serve_forever()
