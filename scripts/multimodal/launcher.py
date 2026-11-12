@@ -123,14 +123,21 @@ def conversations():
                 if not {'username', 'nick_name', 'remark'} <= columns:
                     raise RuntimeError('联系人表结构尚未适配，请反馈微信完整版本号；不会猜测读取')
                 flag = 'verify_flag' if 'verify_flag' in columns else '0'
-                rows = conn.execute('SELECT username,nick_name,remark,' + flag + ' FROM contact ORDER BY nick_name,username').fetchall()
+                # WeChat 4.x keeps every group member in `contact` (local_type 3);
+                # only local_type 1 rows are real friends/followed accounts.
+                local_type = 'local_type' if 'local_type' in columns else 'NULL'
+                rows = conn.execute('SELECT username,nick_name,remark,' + flag + ',' + local_type + ' FROM contact ORDER BY nick_name,username').fetchall()
                 biz_columns = {r[1] for r in conn.execute('PRAGMA table_info(biz_info)')}
                 business = dict(conn.execute('SELECT username,type FROM biz_info')) if {'username', 'type'} <= biz_columns else {}
                 own = account_id(Path(cfg['db_storage']).parent, cfg)
                 recent = recent_activity(Path(cfg['db_storage']), keys)
                 items = []
-                for id, nick, remark, verify_flag in rows:
+                for id, nick, remark, verify_flag, ltype in rows:
                     if not id or id == own:
+                        continue
+                    # Hide non-friend group members, unless you actually chatted 1:1.
+                    if (ltype is not None and ltype != 1 and not id.endswith('@chatroom')
+                            and not (recent and id in recent)):
                         continue
                     kind = account_kind(id, business.get(id), verify_flag, id in business)
                     name = (remark or '').strip() or (nick or '').strip()
