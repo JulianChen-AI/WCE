@@ -24,6 +24,23 @@ async function makeZip(files,onProgress=()=>{}){
 }
 let assetsReady;
 function loadExportAssets(){return assetsReady ||=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='export-assets.js';s.onload=resolve;s.onerror=()=>{assetsReady=null;s.remove();reject(new Error('无法读取媒体导出资源，请保留完整档案目录'));};document.body.append(s);});}
+// Read only selected media; release each small base64 script before the next.
+function loadAssetChunk(src){return new Promise((resolve,reject)=>{
+ if(!/^export-assets\/[a-f0-9]{64}-[0-9]+\.js$/.test(src)){reject(new Error('媒体分块路径无效'));return;}
+ const s=document.createElement('script');s.src=src;
+ const cleanup=()=>{delete window.exportAssetChunk;s.remove();};
+ s.onload=()=>{const value=window.exportAssetChunk;cleanup();typeof value==='string'?resolve(value):reject(new Error('媒体分块内容无效'));};
+ s.onerror=()=>{cleanup();reject(new Error('无法读取媒体分块，请保留完整档案目录'));};document.body.append(s);
+});}
+async function readExportAsset(path){
+ const asset=window.exportAssets[path];if(!asset)throw new Error('媒体导出资源缺失：'+path);
+ // Keep older, small offline archives readable.
+ if(typeof asset==='string'){const raw=atob(asset),bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);return bytes;}
+ if(!Number.isSafeInteger(asset.bytes)||asset.bytes<0||!Array.isArray(asset.chunks))throw new Error('媒体索引无效：'+path);
+ const bytes=new Uint8Array(asset.bytes);let offset=0;
+ for(const src of asset.chunks){const raw=atob(await loadAssetChunk(src));if(offset+raw.length>bytes.length)throw new Error('媒体分块大小不符：'+path);for(let i=0;i<raw.length;i++)bytes[offset+i]=raw.charCodeAt(i);offset+=raw.length;await breathe();}
+ if(offset!==bytes.length)throw new Error('媒体分块不完整：'+path);return bytes;
+}
 document.getElementById('export-filtered').onclick=async()=>{
  const button=document.getElementById('export-filtered'),status=document.getElementById('export-status');
  const selected=structuredClone(filtered);if(!selected.length){status.textContent='没有符合条件的消息';return;}
@@ -48,7 +65,7 @@ document.getElementById('export-filtered').onclick=async()=>{
   const files=new Map(),paths=new Set();
   for(const m of archiveMessages(selected))for(const key of ['src','thumb','original']){const path=m.media?.[key];if(safePath(path))paths.add(path);}
   let mediaDone=0;
-  for(const path of paths){update('处理媒体',5+70*mediaDone/paths.size,mediaDone/paths.size);await breathe();const b64=window.exportAssets[path];if(!b64)throw new Error('媒体导出资源缺失：'+path);const raw=atob(b64);let bytes=Uint8Array.from(raw,c=>c.charCodeAt(0)),target=path;
+  for(const path of paths){update('处理媒体',5+70*mediaDone/paths.size,mediaDone/paths.size);await breathe();let bytes=await readExportAsset(path),target=path;
    if(criteria.image_size!=='original'&&Array.from(archiveMessages(selected)).some(m=>m.type==='image'&&m.media?.src===path)){
     const bitmap=await createImageBitmap(new Blob([bytes]));const edge=criteria.image_size==='light'?2048:1600,quality=criteria.image_size==='light'?0.85:0.8;
     const ratio=Math.min(1,edge/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*ratio));canvas.height=Math.max(1,Math.round(bitmap.height*ratio));const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
