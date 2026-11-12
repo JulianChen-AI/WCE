@@ -1,44 +1,158 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WCE · 微信全导｜WeChat Export</title>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>WCE · 微信全导｜WeChat Export</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f6f5;color:#263b32;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}main{max-width:1050px;margin:28px auto;padding:0 24px}small{color:#697b70}h1{font-size:28px;margin:10px 0}header p{color:#697b70;line-height:1.8}.layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px}section{background:white;border:1px solid #dce5df;border-radius:16px;padding:20px}h2{font-size:18px;margin:0 0 18px}input[type=search]{width:100%;border:1px solid #b8cabe;border-radius:8px;padding:12px;font:inherit}button,.result{border:1px solid #c1d2c7;border-radius:8px;background:#fff;color:#284c37;padding:10px 15px;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:wait}#start{width:100%;background:#32674a;color:white;margin-top:16px}#groups{max-height:390px;overflow:auto;margin-top:14px}.group{display:flex;align-items:flex-start;gap:10px;padding:13px 4px;border-bottom:1px solid #edf1ee;cursor:pointer;overflow-wrap:anywhere}.group input{width:18px;height:18px;flex-shrink:0}.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#logs{background:#f4f7f5;border-radius:8px;padding:14px;height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,monospace}#status{font-weight:600}.result{display:block;margin-top:10px;text-decoration:none}#error{color:#a2392b;white-space:pre-wrap}footer{color:#718176;font-size:12px;margin:20px 0;line-height:1.8}@media(max-width:740px){main{margin:24px auto}.layout{grid-template-columns:1fr}}
-
-#groups{max-height:480px;border:1px solid #e0e8e2;border-radius:12px;background:#fff}
-.group{position:relative;align-items:center;gap:12px;padding:14px 12px;min-height:76px;transition:background .12s;border-bottom:1px solid #edf1ee}
-.group:last-child{border-bottom:0}.group:hover{background:#f5f8f6}.group.is-selected{background:#eaf3ed}.group:focus-within{outline:2px solid #32674a;outline-offset:-2px}.group input{accent-color:#32674a;margin:0}
-.avatar{position:relative;display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:11px;overflow:hidden;background:#e0ece3;color:#31583f;font-size:20px;font-weight:600}
-.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.avatar.group-avatar{background:#e5eaf4;color:#3d537b}
-.contact-copy{min-width:0;flex:1}.contact-name{display:block;font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.contact-detail{display:block;margin-top:5px;color:#586d60;font-size:12px;overflow-wrap:anywhere;line-height:1.5}.last-active{font-size:12px;color:#586d60;flex-shrink:0}
-.list-options{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:14px 0}.list-options select{padding:9px;min-height:44px;font:inherit;border:1px solid #b8cabe;border-radius:8px;background:white;color:inherit}.list-options label{display:flex;align-items:center;gap:6px}.list-options input{accent-color:#32674a}#list-note{display:block;line-height:1.7}#more{display:block;width:100%;margin-top:10px}#more[hidden]{display:none}#empty{padding:24px 14px;color:#586d60;line-height:1.8}
-@media(max-width:440px){.group{gap:9px;padding:12px 9px}.last-active{display:none}section{padding:18px}}
-
-[hidden]{display:none!important}.steps{display:flex;gap:12px;list-style:none;padding:0;margin:18px 0;color:#586d60;flex-wrap:wrap}.steps li{padding:8px 12px;border-radius:20px;background:#e9eeeb}.steps li[aria-current=step]{background:#32674a;color:white}
-#connection-card{margin-top:16px}.connection-top{display:flex;align-items:center;justify-content:space-between;gap:12px}#connection-status{font-weight:600;padding:7px 12px;border-radius:20px;background:#f1eee4;color:#735d26}#connection-status.ready{background:#e4f2e8;color:#245439}#connection-help{line-height:1.8;max-width:65ch;margin:12px 0}.connection-actions{display:flex;gap:10px;flex-wrap:wrap}#connect-wechat{background:#32674a;color:#fff}#account-choice{margin:14px 0}#accounts{width:100%;padding:12px;font:inherit;border:1px solid #b8cabe;border-radius:8px}
-#setup-panel{border-top:1px solid #e0e8e2;margin-top:18px;padding-top:14px}#setup-panel summary{color:#586d60;cursor:pointer}#setup-panel label{display:block;margin:12px 0}#setup-panel input:not([type=checkbox]){display:block;width:100%;padding:10px;margin-top:6px;border:1px solid #b8cabe;border-radius:8px;font:inherit}#setup-panel p{line-height:1.7;color:#586d60}#progress-details{margin:14px 0}#progress-details summary{cursor:pointer;color:#586d60}#logs{height:220px}.privacy-note{display:block;margin-top:14px;line-height:1.8}
-
-#connection-card.connected{display:grid;grid-template-columns:1fr auto;gap:0 16px;padding:16px 20px}.connected .connection-top{grid-column:1/-1}.connected #connection-heading{font-size:16px;margin:0}.connected #connection-help{margin:8px 0;align-self:center;font-size:14px}.connected .connection-actions{grid-column:2;grid-row:2;align-self:center}.connected #setup-panel,.connected #account-choice{grid-column:1/-1}.connected #setup-panel{margin-top:8px;padding-top:10px}.connected .privacy-note{display:none}
-@media(max-width:740px){#connection-card.connected{display:block}.connected .connection-actions{margin-top:10px}}
-.app-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.app-controls{display:flex;gap:8px}.app-controls button{padding:7px 12px;font-size:13px}#quit-app{color:#8a3a2c;border-color:#e2c5bf}
-#notes{margin-top:16px;background:#fbfaf5;border:1px solid #e8e2cc;border-radius:16px;padding:14px 20px}#notes summary{cursor:pointer;font-weight:600;color:#5d4f22}#notes ul{margin:10px 0 2px;padding-left:20px;line-height:1.8;color:#3d4a42}#notes li{margin:4px 0}#notes code{background:#f0ede2;border-radius:4px;padding:1px 5px;font-size:13px;overflow-wrap:anywhere}
-.is-windows .mac-only,.is-mac .win-only{display:none}#stopped{text-align:center;padding:80px 16px}#stopped p{color:#586d60;line-height:1.8}
+:root{--bg:#f2f5f1;--surface:#fff;--surface-2:#f6f8f5;--surface-3:#edf2ec;--border:#e1e8e0;--border-strong:#c9d6cb;--text:#1b2a21;--muted:#637268;--faint:#8b998f;--brand:#2c6e4a;--brand-strong:#215a3b;--brand-soft:#e5f1e9;--brand-ink:#fff;--warm:#fbf5e3;--warm-border:#efe1b8;--warm-ink:#715513;--danger:#b2432f;--danger-soft:#fbece8;--shadow:0 1px 2px rgba(20,35,26,.05),0 10px 30px -12px rgba(20,35,26,.12);--radius:18px;--ring:0 0 0 3px rgba(44,110,74,.25)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1310;--surface:#151c18;--surface-2:#1a221d;--surface-3:#1f2923;--border:#253029;--border-strong:#34423a;--text:#e3ebe5;--muted:#98a79e;--faint:#748178;--brand:#5aae7f;--brand-strong:#79c79a;--brand-soft:#1b3326;--brand-ink:#0b130e;--warm:#231e10;--warm-border:#3d3419;--warm-ink:#e3c677;--danger:#ee8a73;--danger-soft:#2e1a15;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -12px rgba(0,0,0,.5);--ring:0 0 0 3px rgba(90,174,127,.35)}}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+small{color:var(--muted);font-size:13px}code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace}a{color:var(--brand)}
+button{font:inherit;font-size:14px;font-weight:500;color:var(--text);background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;padding:9px 16px;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .05s;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px}
+button:hover:not(:disabled){background:var(--surface-2);border-color:var(--faint)}button:active:not(:disabled){transform:translateY(1px)}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:none;box-shadow:var(--ring)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary,#copy-agent-prompt,#start,#save-setup{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}.primary:hover:not(:disabled),#copy-agent-prompt:hover:not(:disabled),#start:hover:not(:disabled),#save-setup:hover:not(:disabled){background:var(--brand-strong);border-color:var(--brand-strong)}
+.ghost{background:transparent;border-color:transparent;color:var(--muted)}.ghost:hover:not(:disabled){background:var(--surface-3);border-color:transparent;color:var(--text)}
+/* top bar */
+.topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1120px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#3d8a5f,#225a3b);display:grid;place-items:center;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.brand-text{display:flex;flex-direction:column;line-height:1.25;min-width:0}.brand-text strong{white-space:nowrap;font-size:15px;letter-spacing:.2px}.brand-text small{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.app-controls{display:flex;align-items:center;gap:4px}.app-controls button{min-height:34px;padding:6px 11px;font-size:13px}#quit-app:hover:not(:disabled){color:var(--danger);background:var(--danger-soft)}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:var(--warm);color:var(--warm-ink);white-space:nowrap}.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.85}
+.pill.ready{background:var(--brand-soft);color:var(--brand)}#top-status{margin-right:8px}
+/* layout */
+main{max-width:1120px;margin:0 auto;padding:28px 24px 40px}
+.hero h1{transition:font-size .2s;font-size:30px;line-height:1.25;letter-spacing:-.3px;margin:4px 0 6px}.hero p{color:var(--muted);margin:0}
+.steps{display:flex;align-items:center;list-style:none;padding:0;margin:22px 0 22px;gap:0;counter-reset:s}
+.steps li{display:flex;align-items:center;gap:10px;color:var(--faint);font-weight:500;font-size:14px;white-space:nowrap}
+.steps li:not(:last-child)::after{content:"";width:56px;height:2px;border-radius:2px;background:var(--border-strong);margin:0 14px}
+.step-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--surface);border:1.5px solid var(--border-strong);color:var(--faint);transition:all .2s}
+.steps li[aria-current=step]{color:var(--text)}.steps li[aria-current=step] .step-dot{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);box-shadow:0 0 0 5px var(--brand-soft)}
+.steps li.done{color:var(--muted)}.steps li.done .step-dot{background:var(--brand-soft);border-color:var(--brand-soft);color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c6e4a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");background-size:15px;background-repeat:no-repeat;background-position:center}.steps li.done:not(:last-child)::after{background:var(--brand)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+h2{font-size:17px;margin:0;letter-spacing:.1px}
+.is-ready .hero h1{font-size:22px}.is-ready .hero p{display:none}.is-ready .steps{margin:14px 0 16px}
+/* connection */
+#connection-card{padding:24px 26px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:8px 32px}
+.connection-main{min-width:0}.connection-top{display:flex;align-items:center;gap:12px}
+.conn-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--warm);color:var(--warm-ink);flex:none}.connected .conn-icon{background:var(--brand-soft);color:var(--brand)}
+#connection-status{margin-left:auto}#connection-status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:var(--warm);color:var(--warm-ink)}#connection-status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}#connection-status.ready{background:var(--brand-soft);color:var(--brand)}
+#connection-help{color:var(--text);line-height:1.75;margin:14px 0 18px;max-width:60ch}
+.connection-actions{display:flex;gap:10px;flex-wrap:wrap}#connect-wechat{background:var(--surface)}
+#agent-prompt-status{margin:12px 0 0;color:var(--brand);font-size:14px;font-weight:500}#agent-prompt-status:empty{display:none}
+#agent-prompt-fallback{margin-top:12px}#agent-prompt-fallback label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}#agent-prompt-text{width:100%;border:1px solid var(--border-strong);border-radius:10px;padding:12px;font:12.5px/1.6 ui-monospace,monospace;background:var(--surface-2);color:var(--text);resize:vertical}
+#account-choice{margin:16px 0 0}#account-choice label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+select,input[type=search],#setup-panel input:not([type=checkbox]){font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;padding:10px 12px;min-height:42px;width:100%}
+.privacy-note{display:flex;gap:7px;align-items:flex-start;margin-top:18px;line-height:1.7;font-size:12.5px}.privacy-note svg{flex:none;margin-top:3px}
+.how{margin:0;padding:18px 20px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;align-self:start}.how ol{list-style:none;margin:0;padding:0;counter-reset:how}
+.how-title{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px}
+.how li{counter-increment:how;display:grid;grid-template-columns:26px 1fr;gap:2px 10px;padding:9px 0}.how li+li{border-top:1px dashed var(--border-strong)}
+.how li::before{content:counter(how);grid-row:span 2;width:24px;height:24px;border-radius:50%;background:var(--surface);border:1px solid var(--border-strong);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--brand)}
+.how b{font-size:14px}.how span{font-size:13px;color:var(--muted);line-height:1.6}
+#setup-panel{grid-column:1/-1;border-top:1px solid var(--border);margin-top:16px;padding-top:12px}
+summary{cursor:pointer;color:var(--muted);font-size:14px;list-style:none;display:inline-flex;align-items:center;gap:6px;border-radius:6px;user-select:none}summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin:0 3px 0 2px}details[open]>summary::before{transform:rotate(45deg)}
+summary:hover{color:var(--text)}
+#setup-panel>*:not(summary){max-width:620px}#setup-panel label{display:block;margin:14px 0;font-size:14px;color:var(--muted)}#setup-panel input:not([type=checkbox]){margin-top:6px}#setup-panel p{line-height:1.7;color:var(--muted);font-size:13.5px}#setup-panel details{margin:10px 0}#setup-panel label:has(#asr){display:flex;gap:8px;align-items:center;color:var(--text)}#import-connection{margin-top:6px}#setup-status:empty{display:none}
+/* connected = compact strip */
+#connection-card.connected{grid-template-columns:1fr;padding:16px 22px}.connected .how,.connected .privacy-note{display:none}
+.connected .connection-main{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap}.connected .connection-top{display:contents}.connected #connection-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.connected #connection-help{flex:1 1 260px;margin:0;color:var(--muted);font-size:14px;order:2}.connected .conn-icon{order:1}.connected #connection-status{margin:0;order:3}.connected .connection-actions{order:4;gap:8px}.connected .connection-actions button{min-height:34px;padding:6px 12px;font-size:13px}.connected #agent-prompt-status,.connected #account-choice{order:5;flex-basis:100%}
+.connected #setup-panel{margin-top:10px;padding-top:10px}
+/* notes */
+#notes{margin-top:18px;padding:16px 22px;background:var(--warm);border-color:var(--warm-border);box-shadow:none}#notes>summary{color:var(--warm-ink);font-weight:600;font-size:14.5px}
+#notes ul{list-style:none;margin:14px 0 4px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#notes li{background:var(--surface);border:1px solid var(--warm-border);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.7;color:var(--muted)}#notes li b{display:block;color:var(--text);font-size:14px;margin-bottom:2px}
+#notes code{background:var(--surface-3);color:var(--text);border-radius:5px;padding:1px 6px;overflow-wrap:anywhere}
+.is-windows .mac-only,.is-mac .win-only{display:none!important}
+/* workspace */
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;margin-top:20px;align-items:start}
+.layout>section{padding:20px 22px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+.segmented{display:flex;gap:2px;padding:3px;background:var(--surface-3);border-radius:11px;overflow-x:auto;scrollbar-width:none}.segmented::-webkit-scrollbar{display:none}
+.segmented button{flex:1 0 auto;border:0;background:transparent;color:var(--muted);min-height:34px;padding:6px 14px;border-radius:8px;font-size:13.5px;white-space:nowrap}
+.segmented button:hover:not(:disabled){background:color-mix(in srgb,var(--surface) 55%,transparent);color:var(--text)}
+.segmented button[aria-selected=true]{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--border)}
+.segmented.small{flex:none}.segmented.small button{min-height:30px;padding:4px 12px;font-size:13px;flex:none}
+.search{position:relative;margin:12px 0 10px}.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+input[type=search]{padding-left:38px;background:var(--surface-2);border-color:var(--border)}input[type=search]:focus{background:var(--surface);border-color:var(--brand)}
+.list-options{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.list-options .spacer{flex:1}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.switch input{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:999px;background:var(--border-strong);position:relative;margin:0;cursor:pointer;transition:background .15s;flex:none}
+.switch input::before{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked{background:var(--brand)}.switch input:checked::before{transform:translateX(14px)}
+#refresh{min-height:32px;padding:5px 10px;font-size:13px}
+#list-note{display:block;margin:10px 0 12px;line-height:1.6;font-size:12.5px;color:var(--faint)}
+#groups{max-height:min(520px,calc(100vh - 330px));min-height:240px;overflow:auto;border:1px solid var(--border);border-radius:14px;background:var(--surface);overscroll-behavior:contain}
+.group{display:flex;align-items:center;gap:12px;padding:11px 14px;min-height:66px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;position:relative;overflow-wrap:anywhere}
+.group:last-child{border-bottom:0}.group:hover{background:var(--surface-2)}
+.group.is-selected{background:var(--brand-soft)}.group.is-selected::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--brand)}
+.group input{appearance:none;-webkit-appearance:none;width:20px;height:20px;margin:0;flex:none;border:1.6px solid var(--border-strong);border-radius:6px;background:var(--surface);cursor:pointer;transition:all .12s;display:grid;place-items:center}
+.group input:checked{background:var(--brand);border-color:var(--brand);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");background-size:14px;background-position:center;background-repeat:no-repeat}
+.group:focus-within{outline:none;box-shadow:inset 0 0 0 2px var(--brand)}
+.avatar{position:relative;display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:11px;overflow:hidden;background:#dcebe1;color:#2f6448;font-size:17px;font-weight:600}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.avatar.group-avatar{background:#e1e6f3;color:#3f5583}
+@media (prefers-color-scheme:dark){.steps li.done .step-dot{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2379c79a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}.avatar{background:#22382b;color:#9fd2b3}.avatar.group-avatar{background:#252c40;color:#a9b8e0}}
+.contact-copy{min-width:0;flex:1}.contact-name{display:block;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.contact-detail{display:block;margin-top:2px;color:var(--muted);font-size:12.5px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.last-active{font-size:12px;color:var(--faint);flex-shrink:0;font-variant-numeric:tabular-nums}
+#empty{padding:48px 20px;color:var(--muted);text-align:center;line-height:1.8}
+#more{display:flex;width:100%;margin-top:10px;background:var(--surface-2)}
+.action-bar{position:sticky;bottom:0;z-index:2;box-shadow:0 -10px 24px -14px rgba(20,35,26,.25);display:flex;align-items:center;gap:10px;margin:14px -22px -20px;padding:14px 22px;background:var(--surface-2);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius)}
+.action-bar small{flex:1;font-size:12.5px;color:var(--faint)}#start{min-height:44px;padding:10px 22px;font-size:15px;font-weight:600}
+#error{color:var(--danger);white-space:pre-wrap;margin:14px 0 0;font-size:14px}#error:empty{display:none}
+/* export pane */
+.exporter{position:sticky;top:76px}
+.status-block{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border)}
+.status-icon{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--surface-3);color:var(--faint)}
+.status-icon svg{display:none}.status-block[data-state=idle] .i-idle,.status-block:not([data-state]) .i-idle,.status-block[data-state=running] .i-run,.status-block[data-state=done] .i-done,.status-block[data-state=failed] .i-fail{display:block}
+.status-block[data-state=running] .status-icon{background:var(--brand-soft);color:var(--brand)}.status-block[data-state=running] .i-run{animation:spin 1s linear infinite}
+.status-block[data-state=done] .status-icon{background:var(--brand);color:var(--brand-ink)}.status-block[data-state=failed] .status-icon{background:var(--danger-soft);color:var(--danger)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#status{margin:0;font-weight:600;font-size:15px;line-height:1.5}
+.status-sub{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:2px}
+#results{display:grid;gap:8px;margin-top:14px}#results:empty{display:none}
+.result{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font-weight:500;font-size:14px;background:var(--surface);transition:border-color .15s,background .15s}
+.result::after{content:"打开 ↗";margin-left:auto;color:var(--brand);font-size:13px;font-weight:600;white-space:nowrap}.result:hover{border-color:var(--brand);background:var(--brand-soft)}
+.hint{font-size:13px;color:var(--muted);line-height:1.7;margin:14px 0 0}
+#progress-details{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+#logs{margin:10px 0 0;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+footer{color:var(--faint);font-size:12.5px;margin:28px 0 0;line-height:1.8;text-align:center}
+#stopped{min-height:100vh;display:grid;place-items:center;padding:24px}.stopped-card{text-align:center;max-width:420px;padding:40px 32px}.stopped-card .brand-mark{width:52px;height:52px;border-radius:15px;margin:0 auto 18px}
+#stopped h1{font-size:24px;margin:0 0 8px}#stopped p{color:var(--muted);line-height:1.8;margin:0}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.exporter{position:static}#connection-card{grid-template-columns:minmax(0,1fr)}.how{margin-top:16px}}
+@media(max-width:640px){main{padding:20px 16px 32px}.topbar-inner{padding:8px 16px}.brand-text small,#top-status{display:none}.hero h1{font-size:24px}
+.steps li:not(:last-child)::after{width:16px;margin:0 8px}.steps li:not([aria-current=step]) span:last-child{display:none}.app-controls .wide{display:none}.segmented button{padding:6px 10px;font-size:13px}.connected .conn-icon{display:none}#connection-card{padding:18px}#notes ul{grid-template-columns:1fr}.layout>section{padding:16px}
+.action-bar{margin:14px -16px -16px;padding:12px 16px;flex-wrap:wrap}.action-bar small{flex-basis:100%}#start{flex:1}.last-active{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-<main><header><div class="app-bar"><small>只在本机处理</small><div class="app-controls"><button id="restart-app" title="重新启动 WCE，例如刚开好权限之后">重启 WCE</button><button id="quit-app" title="WCE 在后台运行，关掉网页不会退出">退出 WCE</button></div></div><h1>WCE · 微信全导</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step">1. 连接微信</li><li id="step-select">2. 选聊天对象</li><li id="step-export">3. 一键导出</li></ol></header>
-<section id="connection-card" aria-labelledby="connection-heading"><div class="connection-top"><h2 id="connection-heading">1. 连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="copy-agent-prompt">复制连接提示词</button><button id="connect-wechat">我已完成，重新检测</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
-<p id="agent-prompt-status" role="status"></p><div id="agent-prompt-fallback" hidden><label for="agent-prompt-text">复制以下提示词，发给能操作本机的 Agent</label><textarea id="agent-prompt-text" readonly rows="8" style="width:100%"></textarea></div><div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
-<small class="privacy-note">聊天记录仅在本机读取和保存，本工具不主动上传聊天内容。复制的提示词不包含聊天原文或密钥，请勿分享密钥和导出文件。</small>
+<div class="topbar"><div class="topbar-inner"><div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7.5 7.5 0 0 1-11 6.6L4.5 20l1-3.8A7.5 7.5 0 1 1 20 12.5z"/><path d="M12.5 8.5v6m-2.6-2.6 2.6 2.6 2.6-2.6"/></svg></span><div class="brand-text"><strong>WCE · 微信全导</strong><small><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>只在本机处理，不上传聊天</small></div></div>
+<div class="app-controls"><span id="top-status" class="pill">正在检查</span><button id="restart-app" class="ghost" title="重新启动 WCE，例如刚开好权限之后"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>重启<span class="wide"> WCE</span></button><button id="quit-app" class="ghost" title="WCE 在后台运行，关掉网页不会退出"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>退出<span class="wide"> WCE</span></button></div></div></div>
+<main><header class="hero"><h1>把微信聊天记录完整导出到本机</h1><p>连接这台电脑的微信，选好聊天对象，再点导出。文字、图片、语音和视频都会一起保存。</p><ol class="steps" aria-label="操作步骤"><li id="step-connect" aria-current="step"><span class="step-dot">1</span><span>连接微信</span></li><li id="step-select"><span class="step-dot">2</span><span>选聊天对象</span></li><li id="step-export"><span class="step-dot">3</span><span>一键导出</span></li></ol></header>
+<section id="connection-card" class="card" aria-labelledby="connection-heading"><div class="connection-main"><div class="connection-top"><span class="conn-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span><h2 id="connection-heading">连接微信</h2><span id="connection-status" role="status">正在检查</span></div><p id="connection-help">正在查找这台电脑上已保存的连接…</p><div class="connection-actions"><button id="copy-agent-prompt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>复制连接提示词</button><button id="connect-wechat">我已完成，重新检测</button><button id="switch-account" hidden>切换微信账号</button></div><input id="key-file" type="file" accept=".json,application/json" aria-label="选择本机连接文件" hidden>
+<p id="agent-prompt-status" role="status"></p><div id="agent-prompt-fallback" hidden><label for="agent-prompt-text">复制以下提示词，发给能操作本机的 Agent</label><textarea id="agent-prompt-text" readonly rows="8"></textarea></div><div id="account-choice" hidden><label for="accounts">选择要读取的微信账号</label><select id="accounts"></select></div>
+<small class="privacy-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg><span>聊天记录仅在本机读取和保存，本工具不主动上传聊天内容。复制的提示词不包含聊天原文或密钥，请勿分享密钥和导出文件。</span></small></div>
+<div class="how"><p class="how-title">三步完成连接</p><ol aria-label="连接步骤"><li><b>复制提示词</b><span>本机路径、地址等信息已自动填好</span></li><li><b>发给 Agent</b><span>交给能操作这台电脑的 Agent，跟着它一步步做</span></li><li><b>回来检测</b><span>完成后点「我已完成，重新检测」</span></li></ol></div>
 <details id="setup-panel"><summary>高级设置（通常不用改）</summary><p id="setup-note"></p><button id="import-connection">导入已有连接文件（高级）</button><label>微信数据位置<input id="db-path" placeholder="仅在自动识别失败时填写"></label><label>自己的微信账号 ID<input id="own-id"></label><details><summary>图片与文件设置</summary><label>图片 AES 密钥<input id="image-key" type="password" autocomplete="off"></label><label>XOR 参数（0–255）<input id="xor-key" type="number" min="0" max="255" value="0"></label><label>保存位置（留空使用默认位置）<input id="output-path"></label></details><p><label><input id="asr" type="checkbox"> 把语音同时转成文字（更慢，首次需下载模型）</label></p><button id="save-setup">保存高级设置</button><p id="setup-status" role="status"></p></details></section>
-<details id="notes" open><summary>重要事项（第一次用请看）</summary><ul>
-<li><b>WCE 在后台运行。</b>它没有窗口，Dock 和菜单栏里也没有图标；关掉这个网页不会退出它。要退出请点右上角「退出 WCE」，下次双击 WCE 即可重新打开。</li>
-<li><b>不要收藏这个网址。</b>每次打开 WCE，地址末尾的数字（端口）都会变，请始终从 WCE 打开。</li>
-<li><b>电脑版微信要保持登录。</b>读取和导出期间不要退出微信。</li>
-<li class="mac-only"><b>Mac 需要「完全磁盘访问权限」。</b>系统设置 → 隐私与安全性 → 完全磁盘访问权限 → 点「+」→ 按 Command+Shift+G，粘贴 <code id="note-app-path">WCE.app 的路径</code> → 打开 → 确认开关已打开 → 回来点「重启 WCE」。</li>
-<li class="mac-only"><b>不要用搜索找 App。</b>WCE 名字很短，容易打成 WEC；旧版 WeChatChatkit 的图标和它一样，很容易选错。请用 Command+Shift+G 粘贴上面的路径。</li>
-<li class="mac-only"><b>升级或重装 WCE 后要重新授权。</b>即使列表里 WCE 的开关还亮着，旧的授权也已失效：选中 WCE 点「−」删掉，再点「+」重新添加，然后点「重启 WCE」。</li>
-<li><b>只在本机处理。</b>本工具不主动上传聊天内容。不要把连接文件（密钥）或导出的聊天档案发给别人。</li>
-<li class="win-only"><b>Windows 版尚未完整实测。</b>遇到问题请如实反馈，不要强行修改微信或系统设置。</li>
+<details id="notes" class="card" open><summary>重要事项（第一次用请看）</summary><ul>
+<li><b>WCE 在后台运行</b>它没有窗口，Dock 和菜单栏里也没有图标；关掉这个网页不会退出它。要退出请点右上角「退出 WCE」，下次双击 WCE 即可重新打开。</li>
+<li><b>不要收藏这个网址</b>每次打开 WCE，地址末尾的数字（端口）都会变，请始终从 WCE 打开。</li>
+<li><b>电脑版微信要保持登录</b>读取和导出期间不要退出微信。</li>
+<li class="mac-only"><b>Mac 需要「完全磁盘访问权限」</b>系统设置 → 隐私与安全性 → 完全磁盘访问权限 → 点「+」→ 按 Command+Shift+G，粘贴 <code id="note-app-path">WCE.app 的路径</code> → 打开 → 确认开关已打开 → 回来点「重启 WCE」。</li>
+<li class="mac-only"><b>不要用搜索找 App</b>WCE 名字很短，容易打成 WEC；旧版 WeChatChatkit 的图标和它一样，很容易选错。请用 Command+Shift+G 粘贴上面的路径。</li>
+<li class="mac-only"><b>升级或重装 WCE 后要重新授权</b>即使列表里 WCE 的开关还亮着，旧的授权也已失效：选中 WCE 点「−」删掉，再点「+」重新添加，然后点「重启 WCE」。</li>
+<li><b>只在本机处理</b>本工具不主动上传聊天内容。不要把连接文件（密钥）或导出的聊天档案发给别人。</li>
+<li class="win-only"><b>Windows 版尚未完整实测</b>遇到问题请如实反馈，不要强行修改微信或系统设置。</li>
 </ul></details>
-<div id="workspace" class="layout" hidden><section><h2>2. 选聊天对象</h2><label for="kind">会话类型</label> <select id="kind" style="min-height:44px;padding:8px;font:inherit;margin-bottom:6px"><option value="group">群聊</option><option value="contact" selected>联系人</option><option value="official">公众号（订阅号）</option><option value="service">服务号</option><option value="other">其他机构号／类型未明</option></select><small id="list-note">默认显示最近会话，按最近聊天排序。头像只读取本机缓存。</small><label id="search-label" for="search">搜索群名称或 ID</label><input id="search" type="search" placeholder="输入群名或 ID"><div class="list-options"><label for="scope">显示范围 <select id="scope"><option value="recent">最近会话（推荐）</option><option value="all">全部列表</option></select></label><label><input id="show-id" type="checkbox">显示账号 ID</label></div><div class="bar"><small id="count" aria-live="polite">正在读取群聊…</small><button id="refresh">刷新列表</button></div><div id="groups"></div><button id="more" hidden>显示更多</button><div class="bar"><small>切换类型会清空选择</small><button id="clear-selection" disabled>清空选择</button></div><button id="start" disabled>导出所选群聊</button><p id="error" role="alert"></p></section>
-<section><h2>3. 导出并查看</h2><p id="status" role="status">等待选择聊天对象</p><details id="progress-details"><summary>查看详细进度</summary><pre id="logs">导出后，进度会显示在这里。</pre></details><div id="results"></div><small>导出完成后会自动打开，也可以点击上方按钮查看。</small></section></div><footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。导出期间不要退出 WCE 和微信。</footer>
-<div id="stopped" hidden><h1 id="stopped-title">WCE 已退出</h1><p id="stopped-help">可以关闭这个网页了。下次双击 WCE 即可重新打开。</p></div></main>
+<div id="workspace" class="layout" hidden><section class="card picker"><div class="section-head"><h2>选择聊天对象</h2><small id="count" aria-live="polite">正在读取…</small></div>
+<label for="kind" class="sr-only">会话类型</label><select id="kind" class="sr-only" tabindex="-1"><option value="group" data-short="群聊">群聊</option><option value="contact" data-short="联系人" selected>联系人</option><option value="official" data-short="公众号">公众号（订阅号）</option><option value="service" data-short="服务号">服务号</option><option value="other" data-short="其他">其他机构号／类型未明</option></select><div id="kind-tabs" class="segmented" role="tablist" aria-label="会话类型"></div>
+<div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><label id="search-label" for="search" class="sr-only">搜索</label><input id="search" type="search" placeholder="搜索名称、备注或 ID"></div>
+<div class="list-options"><label for="scope" class="sr-only">显示范围</label><select id="scope" class="sr-only" tabindex="-1"><option value="recent" data-short="最近会话">最近会话（推荐）</option><option value="all" data-short="全部">全部列表</option></select><div id="scope-tabs" class="segmented small" role="tablist" aria-label="显示范围"></div><label class="switch"><input id="show-id" type="checkbox"><span>显示账号 ID</span></label><span class="spacer"></span><button id="refresh" class="ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>刷新列表</button></div>
+<small id="list-note">默认显示最近会话，按最近聊天排序。头像只读取本机缓存。</small>
+<div id="groups"></div><button id="more" hidden>显示更多</button>
+<div class="action-bar"><small>切换类型会清空选择</small><button id="clear-selection" class="ghost" disabled>清空选择</button><button id="start" disabled>导出所选群聊</button></div><p id="error" role="alert"></p></section>
+<section class="card exporter"><div class="section-head"><h2>导出并查看</h2></div><div class="status-block" id="status-block" data-state="idle"><span class="status-icon" aria-hidden="true"><svg class="i-idle" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg><svg class="i-run" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg><svg class="i-done" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-fail" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6m0 4h.01"/></svg></span><div><p id="status" role="status">等待选择聊天对象</p><span class="status-sub" id="status-sub">在左边勾选聊天，再点「一键导出」</span></div></div>
+<div id="results"></div><p class="hint">导出完成后会自动打开聊天档案，也可以点上面的档案再次查看。档案是网页文件，可以离线打开。</p><details id="progress-details"><summary>查看详细进度</summary><pre id="logs">导出后，进度会显示在这里。</pre></details></section></div>
+<footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。导出期间不要退出 WCE 和微信。</footer></main>
+<div id="stopped" hidden><div class="stopped-card card"><span class="brand-mark" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7.5 7.5 0 0 1-11 6.6L4.5 20l1-3.8A7.5 7.5 0 1 1 20 12.5z"/><path d="M12.5 8.5v6m-2.6-2.6 2.6 2.6 2.6-2.6"/></svg></span><h1 id="stopped-title">WCE 已退出</h1><p id="stopped-help">可以关闭这个网页了。下次双击 WCE 即可重新打开。</p></div></div>
 <script>
 const $=id=>document.getElementById(id);let groups=[],selected=new Set(),running=false,loading=false,loadVersion=0,limit=80,matchingCount=0,connectionReady=false,connecting=false,setupData=null;
 const kindLabels={group:'群聊',contact:'联系人',official:'公众号（订阅号）',service:'服务号',other:'其他机构号／类型未明'};
@@ -50,7 +164,14 @@ function updateControls(){
   $('scope').disabled=!connectionReady||running||loading;$('clear-selection').disabled=running||loading||!selected.size;
   $('connect-wechat').disabled=running||loading||connecting;$('import-connection').disabled=running||loading||connecting;$('switch-account').disabled=running||loading||connecting;$('accounts').disabled=running||loading||connecting;$('save-setup').disabled=running||connecting;
   $('step-connect').setAttribute('aria-current',connectionReady?'false':'step');$('step-select').setAttribute('aria-current',connectionReady&&!selected.size?'step':'false');$('step-export').setAttribute('aria-current',connectionReady&&selected.size?'step':'false');
+  $('step-connect').classList.toggle('done',connectionReady);$('step-select').classList.toggle('done',connectionReady&&selected.size>0);syncSegmented();
 }
+function segmented(selectId,boxId){
+  const sel=$(selectId),box=$(boxId);box.replaceChildren();
+  for(const o of sel.options){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=o.dataset.short||o.textContent;b.dataset.value=o.value;b.title=o.textContent;
+    b.onclick=()=>{if(sel.disabled||sel.value===o.value)return;sel.value=o.value;sel.dispatchEvent(new Event('change'));syncSegmented();};box.append(b);}
+}
+function syncSegmented(){for(const [s,b] of [['kind','kind-tabs'],['scope','scope-tabs']])for(const btn of $(b).children){btn.setAttribute('aria-selected',String(btn.dataset.value===$(s).value));btn.disabled=$(s).disabled;}}
 function render(){
   const q=$('search').value.trim().toLowerCase(),label=selectionName();
   $('search-label').textContent='搜索'+label+'名称、备注或 ID';$('search').placeholder='输入'+label+'关键词或 ID';
@@ -78,7 +199,7 @@ $('search').oninput=()=>{limit=80;render();};$('refresh').onclick=load;
 $('scope').onchange=()=>{limit=80;render();};$('show-id').onchange=render;$('more').onclick=()=>{limit+=80;render();};$('clear-selection').onclick=()=>{selected.clear();render();};
 $('kind').onchange=()=>{selected.clear();limit=80;$('search').value='';load();};
 $('start').onclick=async()=>{running=true;render();$('error').textContent='';try{const r=await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selected]})});const d=await r.json();if(!r.ok)throw Error(d.error);poll();}catch(e){running=false;render();$('error').textContent=e.message;}};
-async function poll(){try{const d=await(await fetch('/api/status')).json();const wasRunning=running;running=d.status==='running';$('status').textContent={idle:'等待选择聊天对象',running:'正在整理聊天，请保持窗口打开…',done:'导出好了',failed:'没有完成导出，可展开详细进度查看原因'}[d.status];$('logs').textContent=d.logs.join('\n')||'导出后，进度会显示在这里。';$('logs').scrollTop=$('logs').scrollHeight;$('results').replaceChildren();for(const result of d.results){const a=document.createElement('a');a.className='result';a.textContent='查看聊天档案：'+result.name;a.href=result.url;a.target='_blank';a.rel='noopener';$('results').append(a);}if(wasRunning!==running)render();}catch(e){$('status').textContent='工作台连接已断开，请检查启动窗口';}}
+async function poll(){try{const d=await(await fetch('/api/status')).json();const wasRunning=running;running=d.status==='running';const view={idle:['等待选择聊天对象','在左边勾选聊天，再点「一键导出」'],running:['正在整理聊天…','聊天越多越久，请不要退出 WCE 和微信'],done:['导出好了','点下面的档案即可查看，可以离线打开'],failed:['没有完成导出','展开「查看详细进度」可以看到原因'],stopping:['WCE 正在退出','']}[d.status]||['等待选择聊天对象',''];$('status').textContent=view[0];$('status-sub').textContent=view[1];$('status-block').dataset.state=d.status;$('logs').textContent=d.logs.join('\n')||'导出后，进度会显示在这里。';$('logs').scrollTop=$('logs').scrollHeight;$('results').replaceChildren();for(const result of d.results){const a=document.createElement('a');a.className='result';a.textContent='查看聊天档案：'+result.name;a.href=result.url;a.target='_blank';a.rel='noopener';$('results').append(a);}if(wasRunning!==running)render();}catch(e){$('status').textContent='与 WCE 的连接断开了';$('status-sub').textContent='WCE 可能已退出，请重新双击 WCE 打开';$('status-block').dataset.state='failed';}}
 function friendlyError(message){
   if(/权限|拒绝|unable to open/i.test(message))return '暂时无法读取微信。请确认电脑版微信已登录，并允许当前启动工具读取微信数据后重试。';
   if(/密钥|keys|解密/i.test(message))return '连接文件不可用或已失效，请重新导入连接文件。';
@@ -86,6 +207,7 @@ function friendlyError(message){
 }
 function showConnection(ready,help){
   connectionReady=ready;$('connection-card').classList.toggle('connected',ready);$('connection-status').textContent=ready?'已连接':'还未连接';$('connection-status').classList.toggle('ready',ready);
+  $('top-status').textContent=ready?'微信已连接':'微信未连接';document.body.classList.toggle('is-ready',ready);$('top-status').classList.toggle('ready',ready);
   $('connection-help').textContent=help;$('connect-wechat').textContent=ready?'重新检查连接':'我已完成，重新检测';$('copy-agent-prompt').hidden=ready;if(ready){$('agent-prompt-status').textContent='';$('agent-prompt-fallback').hidden=true;}$('workspace').hidden=!ready;
   $('import-connection').hidden=ready;$('switch-account').hidden=!ready;$('setup-panel').open=false;if(!notesTouched)$('notes').open=!ready;render();
 }
@@ -101,7 +223,7 @@ async function stopApp(restart){
   try{
     const r=await fetch(restart?'/api/restart':'/api/quit',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),d=await r.json();
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
-    document.querySelector('main').hidden=true;$('stopped').hidden=false;document.body.append($('stopped'));
+    document.querySelector('main').hidden=true;document.querySelector('.topbar').hidden=true;$('stopped').hidden=false;document.body.append($('stopped'));
     if(restart){$('stopped-title').textContent='WCE 正在重启';$('stopped-help').textContent='新的页面会自动在浏览器打开（地址会变）。这个页面可以关掉了。';}
   }catch(e){alert((restart?'重启':'退出')+'失败：'+e.message);$('restart-app').disabled=$('quit-app').disabled=false;}
 }
@@ -199,5 +321,6 @@ $('restart-app').onclick=()=>stopApp(true);$('quit-app').onclick=()=>stopApp(fal
 $('connect-wechat').onclick=connectWechat;$('save-setup').onclick=saveSetup;$('import-connection').onclick=()=>$('key-file').click();$('key-file').onchange=connectWechat;
 $('switch-account').onclick=()=>{$('account-choice').hidden=!$('account-choice').hidden;$('import-connection').hidden=false;};
 $('accounts').onchange=()=>{$('db-path').value=$('accounts').value;showConnection(false,'已选好微信账号，点击“重试连接”。如果无法连接，请导入这个账号的连接文件。');};
+segmented('kind','kind-tabs');segmented('scope','scope-tabs');syncSegmented();
 setup();poll();setInterval(poll,1500);
 </script></html>
