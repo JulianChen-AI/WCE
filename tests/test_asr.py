@@ -95,6 +95,8 @@ def test_wiring():
     assert 'BooleanOptionalAction' in export and 'disabled_summary(messages)' in export and 'WhisperModel' not in export
     assert "'--transcribe' if transcribe else '--no-transcribe'" in launcher and '--transcribe-archive' in launcher
     assert 'type(transcribe) is not bool' in launcher and 'asr_model_ready' in launcher
+    main = launcher.split("if __name__ == '__main__':", 1)[1]
+    assert main.index('freeze_support()') < main.index("'--export'"), 'frozen helper processes must not start a server'
     assert 'id="asr-now"' in page and "transcribe:$('asr-now').checked" in page and 'asr_model_ready' in page
     assert "meta.transcription.enabled===false" in viewer, 'a disabled export must not claim "0 succeeded"'
     build = (MULTI / 'build_desktop.py').read_text(encoding='utf-8')

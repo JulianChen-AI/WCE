@@ -447,6 +447,11 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    # The frozen app is its own Python: helper processes started by multiprocessing (e.g. the
+    # resource tracker used during voice transcription) re-run this file. Without this call
+    # they would start a second WCE server and overwrite runtime.json.
+    import multiprocessing
+    multiprocessing.freeze_support()
     if '--export' in sys.argv:
         sys.argv.remove('--export')
         from export_full import main
