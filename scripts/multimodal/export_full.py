@@ -20,6 +20,7 @@ from attachments import index_local_files, verified_path, resolve_forward_files
 from forwards import walk_messages
 from emojis import fill_emojis
 from archive_export import build_export
+from asr import disabled_summary, transcribe_voices
 from portable import load_settings, load_keys, account_id, safe_conversation_dir
 
 ROOT = legacy.ROOT
@@ -99,9 +100,13 @@ def write_archive(out, data):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--contact', action='append', required=True)
+    ap.add_argument('--transcribe', action=argparse.BooleanOptionalAction, default=None,
+                    help='本次导出是否转写语音；不写则使用设置里的默认值')
     args = ap.parse_args()
     os.umask(0o077)
     cfg = load_settings()
+    if args.transcribe is not None:
+        cfg['transcribe'] = args.transcribe
     dbroot = Path(cfg['db_storage'])
     account = dbroot.parent
     own = account_id(account, cfg)
@@ -141,7 +146,7 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     print('输出目录：' + str(output), flush=True)
     files = index_local_files(account)
-    model = None
+    asr_cache = {}
     reports = []
     for username, nick, remark in targets:
         display = remark or nick or username
@@ -245,33 +250,16 @@ def main():
                     item.setdefault('missing_reason', '本机未找到校验一致的附件' if item['type'] == 'file' else '本机媒体未找到或尚未成功解码')
         for c in voices:
             c.close()
-        selected = [m for m in messages if m['type'] == 'voice' and m['media'].get('src')]
         meta = dict(peer=display, conversation_id=username, count=len(messages), source_rows=source_count,
                     duplicates_removed=source_count-len(messages), start=messages[0]['time'] if messages else '', end=messages[-1]['time'] if messages else '',
                     counts=dict(collections.Counter(m['type'] for m in messages)), ready=dict(collections.Counter(m['type'] for m in messages if m.get('availability') == 'ready')),
                     unmatched_databases=missing, message_shards=shards, timezone='Asia/Shanghai', scope='本机现存全部历史',
                     limitations=['手机未同步的历史不包含在内', '缺失媒体已逐条标记', '机器转写未人工校对', '原始消息内容保存在 chat.json'],
-                    transcription=dict(selected=len(selected), success=0, scope='全部可用语音', model='base', local_only=True))
+                    transcription=disabled_summary(messages))
         data = dict(meta=meta, messages=messages)
         write_archive(out, data)
-        for i, item in enumerate(selected if cfg['transcribe'] else [], 1):
-            if model is None:
-                try:
-                    from faster_whisper import WhisperModel
-                    model = WhisperModel('base', device='cpu', compute_type='int8', cpu_threads=4, local_files_only=bool(cfg.get('legacy')),
-                                         download_root=cfg['model_dir'])
-                except Exception:
-                    print('本地转写模型不可用，已保留原语音；可安装模型后重试。', flush=True)
-                    break
-            try:
-                segments, _ = model.transcribe(str(out / item['media']['src']), language='zh', beam_size=5, condition_on_previous_text=False)
-                text = ''.join(s.text for s in segments).strip()
-                item['transcription'] = dict(text=text, status='done' if text else 'empty', note='机器转写，未人工校对', model='base')
-                meta['transcription']['success'] += bool(text)
-            except Exception as e:
-                item['transcription'] = dict(text='', status='failed', error_type=type(e).__name__)
-            print(f'{display}：语音转写 {i}/{len(selected)} {item["transcription"]["status"]}', flush=True)
-            write_archive(out, data)
+        if cfg['transcribe']:
+            transcribe_voices(out, data, cfg, display, lambda: write_archive(out, data), cache=asr_cache)
         build_export(out)
         reports.append(meta)
         print(json.dumps(meta, ensure_ascii=False), flush=True)

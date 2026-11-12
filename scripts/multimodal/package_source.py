@@ -8,11 +8,11 @@ TOP = ('README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.gitignore',
        'requirements-desktop.txt', 'install.command', 'docs/INSTALL.md', 'docs/USAGE.md',
        'docs/images/group-export.png', 'docs/images/chat-archive.png', 'docs/images/cover.png')
 RUNTIME = (
-    'archive_export.py', 'attachments.py', 'build_desktop.py', 'emojis.py',
+    'archive_export.py', 'asr.py', 'attachments.py', 'build_desktop.py', 'emojis.py',
     'export_full.py', 'filtered-export.js', 'forwards.py', 'images.py',
     'launcher.html', 'launcher.py', 'package_source.py', 'portable.py',
     'quotes.py', 'repair_files.py', 'requirements-asr.txt', 'requirements.txt',
-    'run.py', 'upstream-lock.json', 'viewer-transcript.html', 'viewer.html',
+    'run.py', 'transcribe_archive.py', 'upstream-lock.json', 'viewer-transcript.html', 'viewer.html',
 )
 CORE = ('__init__.py', 'models.py', 'constants.py', 'db_decryptor.py', 'image_dat.py', 'media.py')
 

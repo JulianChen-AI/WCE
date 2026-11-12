@@ -218,7 +218,13 @@ def accounts():
     return [item for item in conversations() if item['kind'] != 'group']
 
 
-def export(ids):
+def asr_model_ready(model_dir, name='base'):
+    """True when the Whisper model is already on disk, so transcribing needs no download."""
+    snapshots = Path(model_dir) / f'models--Systran--faster-whisper-{name}' / 'snapshots'
+    return any((p / 'model.bin').is_file() for p in snapshots.glob('*')) if snapshots.is_dir() else False
+
+
+def export(ids, transcribe=None):
     output = None
     try:
         archives = Path(load_settings()['output_dir']).resolve()
@@ -226,6 +232,8 @@ def export(ids):
                [sys.executable, '-u', str(Path(__file__)), '--export'])
         for id in ids:
             cmd += ['--contact', id]
+        if transcribe is not None:
+            cmd.append('--transcribe' if transcribe else '--no-transcribe')
         jobs = user_dir() / 'jobs'
         jobs.mkdir(parents=True, exist_ok=True, mode=0o700)
         with tempfile.NamedTemporaryFile(dir=jobs, suffix='.log', delete=False) as log:
@@ -318,6 +326,7 @@ class Handler(SimpleHTTPRequestHandler):
                 configured = True
             except RuntimeError:
                 config, configured = {}, False
+            config['asr_model_ready'] = asr_model_ready(config.get('model_dir') or str(user_dir() / 'models'))
             self.reply(dict(configured=configured, config=config, accounts=discover_accounts(),
                             platform='windows' if sys.platform == 'win32' else 'macos', target_version=TARGET_VERSION,
                             runtime=runtime_info()))
@@ -420,6 +429,9 @@ class Handler(SimpleHTTPRequestHandler):
             ids = body.get('ids')
             if not isinstance(ids, list) or not ids or any(not isinstance(id, str) for id in ids):
                 raise ValueError('请选择联系人或群聊')
+            transcribe = body.get('transcribe')
+            if transcribe is not None and type(transcribe) is not bool:
+                raise ValueError('transcribe 必须是 true 或 false')
             available = {g['id'] for g in conversations()}
             if any(id not in available for id in ids):
                 raise ValueError('联系人或群聊列表已变化，请刷新列表')
@@ -428,7 +440,7 @@ class Handler(SimpleHTTPRequestHandler):
                     self.reply(dict(error='已有导出正在进行'), 409)
                     return
                 state.update(status='running', logs=['开始导出本机现存记录…'], results=[])
-            threading.Thread(target=export, args=(list(dict.fromkeys(ids)),), daemon=True).start()
+            threading.Thread(target=export, args=(list(dict.fromkeys(ids)), transcribe), daemon=True).start()
             self.reply(dict(ok=True))
         except Exception as exc:
             self.reply(dict(error=str(exc)), 400)
@@ -438,6 +450,11 @@ if __name__ == '__main__':
     if '--export' in sys.argv:
         sys.argv.remove('--export')
         from export_full import main
+        main()
+        raise SystemExit(0)
+    if '--transcribe-archive' in sys.argv:
+        sys.argv.remove('--transcribe-archive')
+        from transcribe_archive import main
         main()
         raise SystemExit(0)
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)

@@ -96,7 +96,7 @@ input[type=search]{padding-left:38px;background:var(--surface-2);border-color:va
 #empty{padding:48px 20px;color:var(--muted);text-align:center;line-height:1.8}
 #more{display:flex;width:100%;margin-top:10px;background:var(--surface-2)}
 .action-bar{position:sticky;bottom:0;z-index:2;box-shadow:0 -10px 24px -14px rgba(20,35,26,.25);display:flex;align-items:center;gap:10px;margin:14px -22px -20px;padding:14px 22px;background:var(--surface-2);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius)}
-.action-bar small{flex:1;font-size:12.5px;color:var(--faint)}#start{min-height:44px;padding:10px 22px;font-size:15px;font-weight:600}
+.action-bar small{flex:1;font-size:12.5px;color:var(--faint)}.asr-toggle{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--text);white-space:nowrap;cursor:pointer}.asr-toggle input{width:17px;height:17px;margin:0;accent-color:var(--brand)}#start{min-height:44px;padding:10px 22px;font-size:15px;font-weight:600}
 #error{color:var(--danger);white-space:pre-wrap;margin:14px 0 0;font-size:14px}#error:empty{display:none}
 /* export pane */
 .exporter{position:sticky;top:76px}
@@ -120,7 +120,7 @@ footer{color:var(--faint);font-size:12.5px;margin:28px 0 0;line-height:1.8;text-
 @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.exporter{position:static}#connection-card{grid-template-columns:minmax(0,1fr)}.how{margin-top:16px}}
 @media(max-width:640px){main{padding:20px 16px 32px}.topbar-inner{padding:8px 16px}.brand-text small,#top-status{display:none}.hero h1{font-size:24px}
 .steps li:not(:last-child)::after{width:16px;margin:0 8px}.steps li:not([aria-current=step]) span:last-child{display:none}.app-controls .wide{display:none}.segmented button{padding:6px 10px;font-size:13px}.connected .conn-icon{display:none}#connection-card{padding:18px}#notes ul{grid-template-columns:1fr}.layout>section{padding:16px}
-.action-bar{margin:14px -16px -16px;padding:12px 16px;flex-wrap:wrap}.action-bar small{flex-basis:100%}#start{flex:1}.last-active{display:none}
+.action-bar{margin:14px -16px -16px;padding:12px 16px;flex-wrap:wrap}.action-bar small{flex-basis:100%}.asr-toggle{flex-basis:100%}#start{flex:1}.last-active{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -148,7 +148,7 @@ footer{color:var(--faint);font-size:12.5px;margin:28px 0 0;line-height:1.8;text-
 <div class="list-options"><label for="scope" class="sr-only">显示范围</label><select id="scope" class="sr-only" tabindex="-1"><option value="recent" data-short="最近会话">最近会话（推荐）</option><option value="all" data-short="全部">全部列表</option></select><div id="scope-tabs" class="segmented small" role="tablist" aria-label="显示范围"></div><label class="switch"><input id="show-id" type="checkbox"><span>显示账号 ID</span></label><span class="spacer"></span><button id="refresh" class="ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>刷新列表</button></div>
 <small id="list-note">默认显示最近会话，按最近聊天排序。头像只读取本机缓存。</small>
 <div id="groups"></div><button id="more" hidden>显示更多</button>
-<div class="action-bar"><small>切换类型会清空选择</small><button id="clear-selection" class="ghost" disabled>清空选择</button><button id="start" disabled>导出所选群聊</button></div><p id="error" role="alert"></p></section>
+<div class="action-bar"><small>切换类型会清空选择</small><label class="asr-toggle" title="在这台电脑上把语音转成文字，不上传；首次使用需下载约 140MB 的模型"><input id="asr-now" type="checkbox"> 语音转文字</label><button id="clear-selection" class="ghost" disabled>清空选择</button><button id="start" disabled>导出所选群聊</button></div><p id="error" role="alert"></p></section>
 <section class="card exporter"><div class="section-head"><h2>导出并查看</h2></div><div class="status-block" id="status-block" data-state="idle"><span class="status-icon" aria-hidden="true"><svg class="i-idle" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg><svg class="i-run" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg><svg class="i-done" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="i-fail" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6m0 4h.01"/></svg></span><div><p id="status" role="status">等待选择聊天对象</p><span class="status-sub" id="status-sub">在左边勾选聊天，再点「一键导出」</span></div></div>
 <div id="results"></div><p class="hint">导出完成后会自动打开聊天档案，也可以点上面的档案再次查看。档案是网页文件，可以离线打开。</p><details id="progress-details"><summary>查看详细进度</summary><pre id="logs">导出后，进度会显示在这里。</pre></details></section></div>
 <footer>范围：本机现存全部历史，媒体保持当前可获取大小。语音在本机转写，缺失表情可能联网补取。导出期间不要退出 WCE 和微信。</footer></main>
@@ -162,7 +162,7 @@ function updateControls(){
   $('start').textContent=running?'正在导出…':selected.size?'一键导出（已选 '+selected.size+' 个）':'先勾选要导出的聊天';$('start').disabled=!connectionReady||running||loading||!selected.size;
   $('kind').disabled=!connectionReady||running||loading;$('refresh').disabled=!connectionReady||running||loading;$('search').disabled=!connectionReady||running||loading;
   $('scope').disabled=!connectionReady||running||loading;$('clear-selection').disabled=running||loading||!selected.size;
-  $('connect-wechat').disabled=running||loading||connecting;$('import-connection').disabled=running||loading||connecting;$('switch-account').disabled=running||loading||connecting;$('accounts').disabled=running||loading||connecting;$('save-setup').disabled=running||connecting;
+  $('connect-wechat').disabled=running||loading||connecting;$('import-connection').disabled=running||loading||connecting;$('asr-now').disabled=running;$('switch-account').disabled=running||loading||connecting;$('accounts').disabled=running||loading||connecting;$('save-setup').disabled=running||connecting;
   $('step-connect').setAttribute('aria-current',connectionReady?'false':'step');$('step-select').setAttribute('aria-current',connectionReady&&!selected.size?'step':'false');$('step-export').setAttribute('aria-current',connectionReady&&selected.size?'step':'false');
   $('step-connect').classList.toggle('done',connectionReady);$('step-select').classList.toggle('done',connectionReady&&selected.size>0);syncSegmented();
 }
@@ -198,7 +198,7 @@ async function load(){const version=++loadVersion;loading=true;groups=[];render(
 $('search').oninput=()=>{limit=80;render();};$('refresh').onclick=load;
 $('scope').onchange=()=>{limit=80;render();};$('show-id').onchange=render;$('more').onclick=()=>{limit+=80;render();};$('clear-selection').onclick=()=>{selected.clear();render();};
 $('kind').onchange=()=>{selected.clear();limit=80;$('search').value='';load();};
-$('start').onclick=async()=>{running=true;render();$('error').textContent='';try{const r=await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selected]})});const d=await r.json();if(!r.ok)throw Error(d.error);poll();}catch(e){running=false;render();$('error').textContent=e.message;}};
+$('start').onclick=async()=>{running=true;render();$('error').textContent='';try{const r=await fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[...selected],transcribe:$('asr-now').checked})});const d=await r.json();if(!r.ok)throw Error(d.error);poll();}catch(e){running=false;render();$('error').textContent=e.message;}};
 async function poll(){try{const d=await(await fetch('/api/status')).json();const wasRunning=running;running=d.status==='running';const view={idle:['等待选择聊天对象','在左边勾选聊天，再点「一键导出」'],running:['正在整理聊天…','聊天越多越久，请不要退出 WCE 和微信'],done:['导出好了','点下面的档案即可查看，可以离线打开'],failed:['没有完成导出','展开「查看详细进度」可以看到原因'],stopping:['WCE 正在退出','']}[d.status]||['等待选择聊天对象',''];$('status').textContent=view[0];$('status-sub').textContent=view[1];$('status-block').dataset.state=d.status;$('logs').textContent=d.logs.join('\n')||'导出后，进度会显示在这里。';$('logs').scrollTop=$('logs').scrollHeight;$('results').replaceChildren();for(const result of d.results){const a=document.createElement('a');a.className='result';a.textContent='查看聊天档案：'+result.name;a.href=result.url;a.target='_blank';a.rel='noopener';$('results').append(a);}if(wasRunning!==running)render();}catch(e){$('status').textContent='与 WCE 的连接断开了';$('status-sub').textContent='WCE 可能已退出，请重新双击 WCE 打开';$('status-block').dataset.state='failed';}}
 function friendlyError(message){
   if(/权限|拒绝|unable to open/i.test(message))return '暂时无法读取微信。请确认电脑版微信已登录，并允许当前启动工具读取微信数据后重试。';
@@ -231,7 +231,7 @@ async function setup(){
   try{
     const r=await fetch('/api/setup'),d=await r.json();if(!r.ok)throw Error(d.error);setupData=d;applyRuntime(d);
     $('setup-note').textContent='已适配目标微信 '+d.target_version+'。'+(d.platform==='windows'?'Windows 读取适配尚待实机验证。':'')+'这里只用于排查连接问题；本版本不自动获取连接文件。';
-    $('db-path').value=d.config.db_storage||d.accounts[0]||'';$('own-id').value=d.config.own_id||'';$('output-path').value=d.config.output_dir||'';$('asr').checked=!!d.config.transcribe;
+    $('db-path').value=d.config.db_storage||d.accounts[0]||'';$('own-id').value=d.config.own_id||'';$('output-path').value=d.config.output_dir||'';$('asr').checked=!!d.config.transcribe;$('asr-now').checked=!!(d.config.transcribe||d.config.asr_model_ready);
     $('accounts').replaceChildren();const paths=[...new Set([...(d.config.db_storage?[d.config.db_storage]:[]),...d.accounts])];
     for(const [index,path] of paths.entries()){const o=document.createElement('option');o.value=path;const account=path.split(/[\\/]/).filter(Boolean).slice(-2,-1)[0]||'';o.textContent='微信账号 '+(index+1)+'（'+account.slice(-6)+'）';$('accounts').append(o);}
     $('account-choice').hidden=d.configured||paths.length<=1;

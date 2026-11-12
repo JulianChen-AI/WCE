@@ -23,7 +23,7 @@ def main():
            '--workpath', str(output / 'work'), '--specpath', str(output / 'spec'),
            '--paths', str(ROOT / 'scripts/multimodal'),
            '--paths', str(ROOT / 'vendor/wechat-exporter-mac'),
-           '--hidden-import', 'export_full', '--hidden-import', 'Crypto.Cipher.AES',
+           '--hidden-import', 'export_full', '--hidden-import', 'transcribe_archive', '--hidden-import', 'asr', '--hidden-import', 'Crypto.Cipher.AES',
            '--collect-all', 'sqlcipher3', '--collect-all', 'pysilk', '--collect-all', 'av',
            '--collect-all', 'faster_whisper']
     if sys.platform == 'darwin':
