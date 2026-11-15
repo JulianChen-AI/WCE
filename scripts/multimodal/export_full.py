@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Export explicitly named conversations, hash-verified files, and local ASR.
 
-Original databases are opened read-only. Every invocation creates a new archive.
+Original databases are opened read-only. Every invocation creates a new archive,
+unless --update-archive names an existing conversation archive: then only messages
+newer than that archive are read and merged into it, keyed by message_key.
 """
 import argparse
 import collections
@@ -10,7 +12,7 @@ import json
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -24,6 +26,26 @@ from asr import disabled_summary, transcribe_voices
 from portable import load_settings, load_keys, account_id, safe_conversation_dir
 
 ROOT = legacy.ROOT
+CST = timezone(timedelta(hours=8))
+# Re-read a margin before the archive's last message: late-synced messages can carry
+# an earlier create_time. message_key dedup makes the overlap harmless.
+UPDATE_MARGIN = timedelta(days=1)
+
+
+def load_update_archive(path):
+    out = Path(path).expanduser().resolve()
+    chat = out / 'chat.json'
+    if not chat.is_file():
+        raise RuntimeError('不是 WCE 聊天档案（缺少 chat.json）：' + str(out))
+    old = json.loads(chat.read_text(encoding='utf-8'))
+    if not old.get('meta', {}).get('conversation_id'):
+        raise RuntimeError('档案缺少会话 ID，无法更新：' + str(out))
+    return out, old
+
+
+def update_since(messages):
+    stamps = [m['timestamp'] for m in messages if isinstance(m.get('timestamp'), (int, float))]
+    return datetime.fromtimestamp(max(stamps), CST) - UPDATE_MARGIN if stamps else None
 
 
 def body_and_sender(raw, sender, group):
@@ -99,10 +121,16 @@ def write_archive(out, data):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--contact', action='append', required=True)
+    ap.add_argument('--contact', action='append', default=[])
+    ap.add_argument('--update-archive', help='把新消息合并进这个已有的会话档案目录（含 chat.json）')
     ap.add_argument('--transcribe', action=argparse.BooleanOptionalAction, default=None,
                     help='本次导出是否转写语音；不写则使用设置里的默认值')
     args = ap.parse_args()
+    if bool(args.contact) == bool(args.update_archive):
+        ap.error('请二选一：--contact 导出新档案，或 --update-archive 更新已有档案')
+    update = load_update_archive(args.update_archive) if args.update_archive else None
+    if update:
+        args.contact = [update[1]['meta']['conversation_id']]
     os.umask(0o077)
     cfg = load_settings()
     if args.transcribe is not None:
@@ -142,27 +170,35 @@ def main():
         if len(rows) != 1:
             raise RuntimeError('目标未唯一匹配：' + query)
         targets.append(rows[0])
-    output = Path(cfg['output_dir']) / ('full-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
-    output.mkdir(parents=True, exist_ok=False)
+    if update:
+        output = update[0].parent
+    else:
+        output = Path(cfg['output_dir']) / ('full-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
+        output.mkdir(parents=True, exist_ok=False)
     print('输出目录：' + str(output), flush=True)
     files = index_local_files(account)
     asr_cache = {}
     reports = []
     for username, nick, remark in targets:
         display = remark or nick or username
-        out = safe_conversation_dir(output, display, username)
+        old = update[1] if update else None
+        out = update[0] if update else safe_conversation_dir(output, display, username)
         media = out / 'media'
         for folder in ['image', 'image_enc', 'video', 'file', 'emoji', 'emoji_enc', 'avatar', 'voice']:
-            (media / folder).mkdir(parents=True, exist_ok=False)
+            (media / folder).mkdir(parents=True, exist_ok=bool(update))
+        old_messages = old['messages'] if old else []
+        since = update_since(old_messages) if old else None
+        if old:
+            print(display + '：更新已有档案，读取 ' + (since.strftime('%Y-%m-%d %H:%M:%S') if since else '全部') + ' 之后的消息', flush=True)
         mod = legacy.load_exporter()
         mod.sqlite3 = type('DB', (), {'connect': staticmethod(open_db)})
         mod.load_emoji_cdn = lambda _: {}
         original_decode = mod.decode_content
         mod.decode_content = lambda content, ct: body_and_sender(original_decode(content, ct), '', username.endswith('@chatroom'))[0]
         table = 'Msg_' + hashlib.md5(username.encode()).hexdigest()
-        options = dict(dec=dbroot, table=table, my_wxid=own, my_name='我', display=display, **legacy.media_keys(account), media=media, since=None,
+        options = dict(dec=dbroot, table=table, my_wxid=own, my_name='我', display=display, **legacy.media_keys(account), media=media, since=since,
                        attach=account / 'msg/attach' / hashlib.md5(username.encode()).hexdigest(), video_root=account / 'msg/video', file_root=account / 'msg/file', emo_root=account / 'business/emoticon')
-        messages, seen, shards = [], set(), []
+        messages, seen, shards = [], {m['message_key'] for m in old_messages if m.get('message_key')}, []
         source_count = 0
         for db in matched:
             if not re.fullmatch(r'message_\d+\.db', db.name):
@@ -204,7 +240,10 @@ def main():
                 if item['type'] == 'system' and not body.startswith('<'):
                     item['text'] = body
                 if (local_type & 65535) == 49:
-                    app = ET.fromstring(body).find('appmsg')
+                    try:
+                        app = ET.fromstring(body).find('appmsg')
+                    except ET.ParseError:
+                        app = None
                     if app is not None and app.findtext('type') == '87':
                         item.update(type='text', text='[群公告]\n' + (app.findtext('textannouncement') or app.findtext('announcement') or ''))
                         item['media'] = {}
@@ -228,7 +267,13 @@ def main():
             emoji_cdn = {md5.lower(): url for md5, url in ec.execute(
                 'SELECT md5,cdn_url FROM kNonStoreEmoticonTable WHERE cdn_url IS NOT NULL AND cdn_url!=\'\'') if md5}
             ec.close()
-        fill_emojis(messages, account, out, emoji_cdn)
+        # An update also retries emojis the earlier export could not fetch.
+        retry = [m for m in old_messages if m.get('type') == 'emoji' and not m.get('media', {}).get('src')]
+        fill_emojis(messages + retry, account, out, emoji_cdn)
+        for item in retry:
+            if item['media'].get('src'):
+                item['availability'] = 'ready'
+                item.pop('missing_reason', None)
         voices = [open_db(p) for p in matched if re.fullmatch(r'media_\d+\.db', p.name)]
         for item in messages:
             if item['type'] == 'voice':
@@ -250,21 +295,39 @@ def main():
                     item.setdefault('missing_reason', '本机未找到校验一致的附件' if item['type'] == 'file' else '本机媒体未找到或尚未成功解码')
         for c in voices:
             c.close()
+        added = len(messages)
+        if old:
+            messages = old_messages + messages
+            messages.sort(key=lambda m: (m['timestamp'], m['source_db'], m['id']))
         meta = dict(peer=display, conversation_id=username, count=len(messages), source_rows=source_count,
                     duplicates_removed=source_count-len(messages), start=messages[0]['time'] if messages else '', end=messages[-1]['time'] if messages else '',
                     counts=dict(collections.Counter(m['type'] for m in messages)), ready=dict(collections.Counter(m['type'] for m in messages if m.get('availability') == 'ready')),
                     unmatched_databases=missing, message_shards=shards, timezone='Asia/Shanghai', scope='本机现存全部历史',
                     limitations=['手机未同步的历史不包含在内', '缺失媒体已逐条标记', '机器转写未人工校对', '原始消息内容保存在 chat.json'],
                     transcription=disabled_summary(messages))
+        if old:
+            if (old['meta'].get('transcription') or {}).get('enabled'):
+                meta['transcription'] = old['meta']['transcription']
+            meta['updates'] = old['meta'].get('updates', []) + [dict(time=datetime.now(CST).strftime('%Y-%m-%d %H:%M:%S'), added=added,
+                                                                       since=since.strftime('%Y-%m-%d %H:%M:%S') if since else '')]
+            print(display + '：新增 ' + str(added) + ' 条消息，档案现有 ' + str(len(messages)) + ' 条', flush=True)
         data = dict(meta=meta, messages=messages)
         write_archive(out, data)
         if cfg['transcribe']:
-            transcribe_voices(out, data, cfg, display, lambda: write_archive(out, data), cache=asr_cache)
+            transcribe_voices(out, data, cfg, display, lambda: write_archive(out, data), only_missing=bool(old), cache=asr_cache)
+        if old:
+            # Packaged copies are regenerated from the merged archive.
+            shutil.rmtree(out / 'export-assets', ignore_errors=True)
+            (out / '完整聊天档案.zip').unlink(missing_ok=True)
         build_export(out)
         reports.append(meta)
         print(json.dumps(meta, ensure_ascii=False), flush=True)
     contact.close()
-    (output / '汇总.json').write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding='utf-8')
+    summary = output / '汇总.json'
+    if update and summary.is_file():
+        previous = [r for r in json.loads(summary.read_text(encoding='utf-8')) if r.get('conversation_id') not in {r['conversation_id'] for r in reports}]
+        reports = previous + reports
+    summary.write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding='utf-8')
     print('完成：' + str(output), flush=True)
 
 

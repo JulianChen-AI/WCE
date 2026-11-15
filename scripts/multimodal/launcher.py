@@ -224,12 +224,48 @@ def asr_model_ready(model_dir, name='base'):
     return any((p / 'model.bin').is_file() for p in snapshots.glob('*')) if snapshots.is_dir() else False
 
 
-def export(ids, transcribe=None):
+def archive_root():
+    return Path(load_settings()['output_dir']).expanduser().resolve()
+
+
+def existing_archives(limit=40):
+    """Conversation archives that can be updated in place, newest first."""
+    root = archive_root()
+    found = []
+    for chat in root.glob('*/*/chat.json'):
+        report = chat.parent / 'report.json'
+        try:
+            meta = json.loads(report.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        if not meta.get('conversation_id'):
+            continue
+        updates = meta.get('updates') or []
+        found.append(dict(path=chat.parent.relative_to(root).as_posix(), peer=meta.get('peer', ''), conversation_id=meta['conversation_id'],
+                          count=meta.get('count', 0), end=meta.get('end', ''), updated=updates[-1]['time'] if updates else '',
+                          url='/archive/' + quote(chat.parent.relative_to(root).as_posix() + '/index.html'), mtime=chat.stat().st_mtime))
+    found.sort(key=lambda a: a['mtime'], reverse=True)
+    return found[:limit]
+
+
+def resolve_update_archive(rel):
+    root = archive_root()
+    if not isinstance(rel, str) or not rel:
+        raise ValueError('请选择要更新的档案')
+    out = (root / rel).resolve()
+    if not out.is_relative_to(root) or out.parent.parent != root or not (out / 'chat.json').is_file():
+        raise ValueError('档案不存在或不在保存位置里')
+    return out
+
+
+def export(ids, transcribe=None, update_archive=None):
     output = None
     try:
-        archives = Path(load_settings()['output_dir']).resolve()
+        archives = archive_root()
         cmd = ([sys.executable, '--export'] if getattr(sys, 'frozen', False) else
                [sys.executable, '-u', str(Path(__file__)), '--export'])
+        if update_archive:
+            cmd += ['--update-archive', str(update_archive)]
         for id in ids:
             cmd += ['--contact', id]
         if transcribe is not None:
@@ -312,6 +348,11 @@ class Handler(SimpleHTTPRequestHandler):
         elif path == '/api/accounts':
             try:
                 self.reply(dict(accounts=accounts()))
+            except Exception as exc:
+                self.reply(dict(error=str(exc)), 500)
+        elif path == '/api/archives':
+            try:
+                self.reply(dict(archives=existing_archives()))
             except Exception as exc:
                 self.reply(dict(error=str(exc)), 500)
         elif path == '/api/contacts':
@@ -426,21 +467,26 @@ class Handler(SimpleHTTPRequestHandler):
                 save_settings(config, keys)
                 self.reply(dict(ok=True))
                 return
-            ids = body.get('ids')
-            if not isinstance(ids, list) or not ids or any(not isinstance(id, str) for id in ids):
-                raise ValueError('请选择联系人或群聊')
             transcribe = body.get('transcribe')
             if transcribe is not None and type(transcribe) is not bool:
                 raise ValueError('transcribe 必须是 true 或 false')
-            available = {g['id'] for g in conversations()}
-            if any(id not in available for id in ids):
-                raise ValueError('联系人或群聊列表已变化，请刷新列表')
+            update_archive = None
+            if body.get('update_archive') is not None:
+                update_archive = resolve_update_archive(body['update_archive'])
+                ids = []
+            else:
+                ids = body.get('ids')
+                if not isinstance(ids, list) or not ids or any(not isinstance(id, str) for id in ids):
+                    raise ValueError('请选择联系人或群聊')
+                available = {g['id'] for g in conversations()}
+                if any(id not in available for id in ids):
+                    raise ValueError('联系人或群聊列表已变化，请刷新列表')
             with lock:
                 if state['status'] == 'running':
                     self.reply(dict(error='已有导出正在进行'), 409)
                     return
                 state.update(status='running', logs=['开始导出本机现存记录…'], results=[])
-            threading.Thread(target=export, args=(list(dict.fromkeys(ids)), transcribe), daemon=True).start()
+            threading.Thread(target=export, args=(list(dict.fromkeys(ids)), transcribe, update_archive), daemon=True).start()
             self.reply(dict(ok=True))
         except Exception as exc:
             self.reply(dict(error=str(exc)), 400)
